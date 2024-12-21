@@ -14,7 +14,7 @@ namespace LFramework
             process = StartProcess.Construct;
         }
 
-        private void Bootstrap(params IBootstrap[] bootstraps)
+        public void Bootstrap(params IBootstrap[] bootstraps)
         {
             if (process != StartProcess.Construct)
             {

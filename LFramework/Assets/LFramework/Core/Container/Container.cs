@@ -400,7 +400,7 @@ namespace LFramework
                 return Activator.CreateInstance(makeServiceType);
             }
 
-            return Activator.CreateInstance(makeServiceType, userParams);
+            return Activator.CreateInstance(makeServiceType, userParams.ToArray());
         }
 
         private List<object> GetConstructorsInjectParams(Bindable makeServiceBindable, Type makeServiceType,

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using CoreTest;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace LFramework
 {
@@ -12,9 +13,15 @@ namespace LFramework
             new ProviderService2()
         };
 
+        [SerializeField] private List<GameObject> injectMonoInstances;
+
         public void Bootstrap()
         {
-            providerList.AddRange(GetComponentsInChildren<IProvideService>());
+            for (int i = 0; i < injectMonoInstances.Count; i++)
+            {
+                var instance = injectMonoInstances[i];
+                providerList.Add(instance.GetComponent<IProvideService>());
+            }
 
             for (int i = 0; i < providerList.Count; i++)
             {

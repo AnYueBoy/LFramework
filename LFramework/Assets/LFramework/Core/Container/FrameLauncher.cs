@@ -1,4 +1,5 @@
 ﻿using System;
+using CoreTest;
 using UnityEngine;
 
 namespace LFramework
@@ -12,6 +13,11 @@ namespace LFramework
             var bootstrap = GetComponent<IBootstrap>();
             application.Bootstrap(bootstrap);
             application.Init();
+        }
+
+        private void Update()
+        {
+            App.Make<Service2>();
         }
     }
 }

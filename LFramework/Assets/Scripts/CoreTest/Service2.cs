@@ -20,7 +20,6 @@ namespace CoreTest
 
         public void Service2Interface()
         {
-            Debug.LogError("接口方法");
         }
     }
 }

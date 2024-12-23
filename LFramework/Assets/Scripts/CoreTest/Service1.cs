@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using LFramework;
 using UnityEngine;
 
-[InjectAnalysis]
 public class Service1
 {
     public Service1()

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LFramework
+namespace InjectionCore
 {
     public interface IContainer
     {

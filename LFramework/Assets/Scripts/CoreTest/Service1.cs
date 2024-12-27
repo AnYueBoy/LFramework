@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using LFramework;
+using InjectionCore;
 using UnityEngine;
 
 public class Service1

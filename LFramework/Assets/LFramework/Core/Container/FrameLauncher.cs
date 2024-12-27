@@ -2,7 +2,7 @@
 using CoreTest;
 using UnityEngine;
 
-namespace LFramework
+namespace InjectionCore
 {
     public class FrameLauncher : MonoBehaviour
     {

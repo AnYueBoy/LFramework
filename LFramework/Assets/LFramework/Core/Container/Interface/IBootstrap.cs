@@ -1,4 +1,4 @@
-﻿namespace LFramework
+﻿namespace InjectionCore
 {
     public interface IBootstrap
     {

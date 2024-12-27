@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LFramework
+namespace InjectionCore
 {
     public sealed class Bindable : IBindable
     {

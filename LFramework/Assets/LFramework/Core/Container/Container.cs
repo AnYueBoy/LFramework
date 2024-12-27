@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace LFramework
+namespace InjectionCore
 {
     public class Container : IContainer
     {

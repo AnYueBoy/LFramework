@@ -1,4 +1,4 @@
-using LFramework;
+using InjectionCore;
 
 namespace CoreTest
 {

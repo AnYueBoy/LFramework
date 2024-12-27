@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LFramework
+namespace InjectionCore
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class InjectAttribute : Attribute

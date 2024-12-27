@@ -3,7 +3,7 @@ using CoreTest;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace LFramework
+namespace InjectionCore
 {
     public class SystemBootstrap : MonoBehaviour, IBootstrap
     {

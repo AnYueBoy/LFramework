@@ -1,4 +1,4 @@
-using LFramework;
+using InjectionCore;
 using UnityEngine;
 
 namespace CoreTest

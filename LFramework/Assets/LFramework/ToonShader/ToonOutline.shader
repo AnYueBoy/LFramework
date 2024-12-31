@@ -66,9 +66,12 @@ Shader "Unlit/ToonOutline"
                 v2f o;
                 UNITY_INITIALIZE_OUTPUT(v2f, o);
                 float4 pos = UnityObjectToClipPos(v.vertex);
-                float3 viewNormal = mul((float3x3)UNITY_MATRIX_IT_MV, v.normal.xyz);
-                float3 ndcNormal = normalize(TransformViewToProjection(viewNormal.xyz)) * pos.w; //将法线变换到NDC空间
-                pos.xy += 0.01 * _OutlineWidth * ndcNormal.xy;
+                // 变换到齐次裁剪坐标系中
+                float3 clipN = normalize(mul((float3x3)unity_MatrixMVP, v.normal.xyz));
+                // 乘上w 当进行NDC时，可以保持描边宽度不变
+                float3 ndcN = clipN * pos.w;
+                pos.xy += 0.01 * _OutlineWidth * ndcN.xy;
+
                 o.vertex = pos;
                 return o;
             }

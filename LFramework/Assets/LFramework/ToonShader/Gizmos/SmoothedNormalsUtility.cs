@@ -30,107 +30,97 @@ public class SmoothedNormalsUtility : EditorWindow
 
     private void OnGUI()
     {
-        EditorGUILayout.BeginHorizontal();
-
-        EditorGUILayout.LabelField("法线平滑工具", BigHeaderLabel);
-
-        EditorGUILayout.EndHorizontal();
-
-        if (meshMap != null && meshMap.Count > 0)
+        if (meshMap == null || meshMap.Count <= 0)
         {
-            GUILayout.Space(4);
-            EditorGUILayout.LabelField("待处理的网格", BigHeaderLabel, GUILayout.ExpandWidth(true));
-            mScroll = EditorGUILayout.BeginScrollView(mScroll);
-
-            bool hasSkinnedMeshes = false;
-
-            foreach (var selectedMesh in meshMap.Values)
-            {
-                GUILayout.Space(2);
-                GUILayout.BeginHorizontal();
-                var label = selectedMesh.MeshName;
-                if (label.Contains(filenameSuffix))
-                {
-                    label = label.Replace(filenameSuffix, "\n" + filenameSuffix);
-                }
-
-                GUILayout.Label(label, EditorStyles.wordWrappedMiniLabel, GUILayout.Width(260));
-                selectedMesh.IsSkinned = GUILayout.Toggle(selectedMesh.IsSkinned,
-                    new GUIContent(" Skinned", "请检查网格是否在SkinnedMeshRenderer上使用"));
-                hasSkinnedMeshes |= selectedMesh.IsSkinned;
-                GUILayout.Space(6);
-                GUILayout.EndHorizontal();
-                GUILayout.Space(2);
-                SeparatorSimple();
-            }
-
-            EditorGUILayout.EndScrollView();
+            EditorGUILayout.HelpBox(
+                "选择一个或多个网格创建平滑法线下的网格.\n你也可以直接在Scene中选择模型，新网格将自动分配。",
+                MessageType.Info);
             GUILayout.FlexibleSpace();
-
-            if (hasSkinnedMeshes)
-            {
-                EditorGUILayout.HelpBox(
-                    "Skin Mesh 的平滑法线仅能储存在切线数据中.",
-                    MessageType.Warning);
-            }
-
-            if (GUILayout.Button("产生平滑的网格(法线)数据", GUILayout.Height(30)))
-            {
-                try
-                {
-                    var selection = new List<Object>();
-                    float progress = 1;
-                    float total = meshMap.Count;
-                    foreach (var selectedMesh in meshMap.Values)
-                    {
-                        if (selectedMesh == null)
-                            continue;
-
-                        EditorUtility.DisplayProgressBar("稍等",
-                            "正在处理网格" +
-                            selectedMesh.MeshName, progress / total);
-                        progress++;
-                        // 产生平滑的网格资源
-                        Object o = CreateSmoothedMeshAsset(selectedMesh);
-                        if (o != null)
-                            selection.Add(o);
-                    }
-
-                    Selection.objects = selection.ToArray();
-                }
-                finally
-                {
-                    EditorUtility.ClearProgressBar();
-                }
-            }
+            using (new EditorGUI.DisabledScope(true))
+                GUILayout.Button("产生平滑的网格(法线)数据", GUILayout.Height(30));
 
             return;
         }
 
-        EditorGUILayout.HelpBox(
-            "选择一个或多个网格创建平滑法线下的网格。\\n\\n你也可以直接在Scene中选择模型，新网格将自动分配。",
-            MessageType.Info);
+        GUILayout.Space(4);
+        EditorGUILayout.LabelField("待处理的网格", BigHeaderLabel, GUILayout.ExpandWidth(true));
+        mScroll = EditorGUILayout.BeginScrollView(mScroll);
+
+        bool hasSkinnedMeshes = false;
+
+        foreach (var selectedMesh in meshMap.Values)
+        {
+            GUILayout.Space(2);
+            GUILayout.BeginHorizontal();
+            var label = selectedMesh.MeshName;
+            if (label.Contains(filenameSuffix))
+            {
+                label = label.Replace(filenameSuffix, "\n" + filenameSuffix);
+            }
+
+            GUILayout.Label(label, EditorStyles.wordWrappedMiniLabel, GUILayout.Width(260));
+            selectedMesh.IsSkinned = GUILayout.Toggle(selectedMesh.IsSkinned,
+                new GUIContent(" Skinned", "请检查网格是否在SkinnedMeshRenderer上使用"));
+            hasSkinnedMeshes |= selectedMesh.IsSkinned;
+            GUILayout.Space(6);
+            GUILayout.EndHorizontal();
+            GUILayout.Space(2);
+            SeparatorSimple();
+        }
+
+        EditorGUILayout.LabelField("选项", BigHeaderLabel, GUILayout.ExpandWidth(true));
+        smoothedNormalChannel = (SmoothedNormalsChannel)EditorGUILayout.EnumPopup("存储通道", smoothedNormalChannel);
+
+        EditorGUILayout.EndScrollView();
         GUILayout.FlexibleSpace();
-        using (new EditorGUI.DisabledScope(true))
-            GUILayout.Button("产生平滑的网格(法线)数据", GUILayout.Height(30));
+
+        if (hasSkinnedMeshes)
+        {
+            EditorGUILayout.HelpBox(
+                "Skin Mesh 的平滑法线仅能储存在切线数据中.",
+                MessageType.Warning);
+        }
+
+        if (GUILayout.Button("产生平滑的网格(法线)数据", GUILayout.Height(30)))
+        {
+            try
+            {
+                var selection = new List<Object>();
+                float progress = 1;
+                float total = meshMap.Count;
+                foreach (var selectedMesh in meshMap.Values)
+                {
+                    if (selectedMesh == null)
+                        continue;
+
+                    EditorUtility.DisplayProgressBar("稍等",
+                        "正在处理网格" +
+                        selectedMesh.MeshName, progress / total);
+                    progress++;
+                    // 产生平滑的网格资源
+                    Object o = CreateSmoothedMeshAsset(selectedMesh);
+                    if (o != null)
+                        selection.Add(o);
+                }
+
+                Selection.objects = selection.ToArray();
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+        }
     }
 
     #region 创建网格/平滑网格
 
-    private bool mCustomDirectory;
-    public string mCustomDirectoryPath = "";
-    private bool mAlwaysOverwrite;
+    private const string mCustomDirectoryPath = "SmoothedMeshes/";
 
     private SmoothedNormalsChannel smoothedNormalChannel = SmoothedNormalsChannel.VertexColors;
 
     private Mesh CreateSmoothedMeshAsset(SelectedMesh originalMesh)
     {
         var rootPath = Application.dataPath + "/";
-        if (string.IsNullOrEmpty(mCustomDirectoryPath))
-        {
-            mCustomDirectoryPath = "SmoothedMeshes/";
-        }
-
         rootPath += mCustomDirectoryPath;
 
         if (!Directory.Exists(rootPath))
@@ -332,36 +322,14 @@ public class SmoothedNormalsUtility : EditorWindow
             smoothedNormalsChannel == SmoothedNormalsChannel.UV3 ||
             smoothedNormalsChannel == SmoothedNormalsChannel.UV4)
         {
-            int uvIndex = -1;
-
-            switch (smoothedNormalsChannel)
-            {
-                case SmoothedNormalsChannel.UV1:
-                    uvIndex = 0;
-                    break;
-                case SmoothedNormalsChannel.UV2:
-                    uvIndex = 1;
-                    break;
-                case SmoothedNormalsChannel.UV3:
-                    uvIndex = 2;
-                    break;
-                case SmoothedNormalsChannel.UV4:
-                    uvIndex = 3;
-                    break;
-                default:
-                    Debug.LogError("平滑法线的UV通道不可用 " + smoothedNormalsChannel);
-                    break;
-            }
-
             // 存储到UV信息中
-            newMesh.SetUVs(uvIndex, new List<Vector3>(averageNormals));
+            newMesh.SetUVs((int)smoothedNormalChannel, new List<Vector3>(averageNormals));
         }
 
         return newMesh;
     }
 
     #endregion
-
 
     private void CopyBlendShapes(Mesh originalMesh, Mesh newMesh)
     {
@@ -564,19 +532,12 @@ public class SmoothedNormalsUtility : EditorWindow
 
     public enum SmoothedNormalsChannel
     {
-        VertexColors,
-        Tangents,
-        UV1,
+        UV1 = 0,
         UV2,
         UV3,
-        UV4
-    }
-
-    public enum SmoothedNormalsUVType
-    {
-        FullXYZ,
-        CompressedXY,
-        CompressedZW
+        UV4,
+        VertexColors,
+        Tangents,
     }
 
     #region 样式

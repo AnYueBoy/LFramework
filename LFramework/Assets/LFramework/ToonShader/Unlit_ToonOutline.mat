@@ -30,7 +30,11 @@ Material:
     m_Ints: []
     m_Floats:
     - _OutlineWidth: 1.1
+    - _ShadowRange: 0.5
+    - _ShadowSmooth: 0.2
     - _UseSimply: 0
     m_Colors:
+    - _MainColor: {r: 1, g: 1, b: 1, a: 1}
     - _OutLineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _ShadowColor: {r: 0.7, g: 0.7, b: 0.8, a: 1}
   m_BuildTextureStacks: []

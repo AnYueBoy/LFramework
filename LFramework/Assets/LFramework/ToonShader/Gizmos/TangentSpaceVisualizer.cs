@@ -41,6 +41,11 @@ public class TangentSpaceVisualizer : MonoBehaviour
 
     private void ShowTangentSpace(Vector3 vertex, Vector3 normal, Vector3 tangent, float binormalSign)
     {
+        if (showType == ShowType.None)
+        {
+            return;
+        }
+
         vertex += normal * offset;
         if (showType == ShowType.ALL || showType == ShowType.NORMAL)
         {
@@ -64,6 +69,7 @@ public class TangentSpaceVisualizer : MonoBehaviour
 
     private enum ShowType
     {
+        None,
         ALL,
         NORMAL,
         TANGENT,

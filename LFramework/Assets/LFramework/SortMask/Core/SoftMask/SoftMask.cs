@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace LFramework.SortMask
 {
@@ -42,7 +44,21 @@ namespace LFramework.SortMask
         #endregion
 
         private readonly MaterialReplacements materials;
+        private MaterialParameters parameters;
+        private Rect lastMaskRect;
+        private bool maskingEnable;
+        private bool destroyed;
+        private bool dirty;
+        private readonly Queue<Transform> transSpawnMaskableQueue = new Queue<Transform>();
 
+        private RectTransform maskTransform;
+        private Graphic graphic;
+        private Canvas canvas;
 
+        public SoftMask()
+        {
+            var materialReplacer = new MaterialReplacerChain(
+                MaterialReplacer.GlobalReplacers,);
+        }
     }
 }

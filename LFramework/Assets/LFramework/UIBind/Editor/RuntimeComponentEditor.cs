@@ -7,7 +7,6 @@ using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditorInternal;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace LFramework
 {
@@ -63,7 +62,13 @@ namespace LFramework
         private void GenerateBindCode()
         {
             var context = serializedObject.targetObject as RuntimeComponent;
-            var classUIName = context.gameObject.name + "UI";
+            var classUIName = context.gameObject.name;
+            if (!classUIName.Contains("UI"))
+            {
+                Debug.LogError("节点必须以UI后缀为结尾");
+                return;
+            }
+
             var classExtensionName = classUIName + "Extension";
             StringBuilder sb = new StringBuilder();
             HashSet<string> allNameSpace = new HashSet<string>();

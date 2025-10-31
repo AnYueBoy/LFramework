@@ -12,7 +12,6 @@ namespace LFramework
     {
         public BindUIData[] bindDataArray;
 
-
         [InitializeOnLoadMethod]
         private static void Load()
         {

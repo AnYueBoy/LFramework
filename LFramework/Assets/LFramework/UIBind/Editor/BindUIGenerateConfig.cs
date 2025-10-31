@@ -17,7 +17,7 @@ namespace LFramework
                 {
                     SerializedObject setting = new SerializedObject(BindUIGenerateConfig.GetSerializedObject());
                     EditorGUILayout.PropertyField(setting.FindProperty("codeGeneratePath"),
-                        new GUIContent("Code Generate Path"));
+                        new GUIContent("代码生成路径"));
                     setting.ApplyModifiedPropertiesWithoutUndo();
                 },
                 keywords = new[] { "Bind UI Setting" }
@@ -28,13 +28,33 @@ namespace LFramework
 
     public class BindUIGenerateConfig : ScriptableObject
     {
-        [Header("代码生成路径")] public string codeGeneratePath;
+        public string codeGeneratePath;
 
         private static BindUIGenerateConfig configInstance;
 
         public static BindUIGenerateConfig GetSerializedObject()
         {
-            return FindObjectOfType<BindUIGenerateConfig>();
+            if (configInstance == null)
+            {
+                var tempInstance = CreateInstance<BindUIGenerateConfig>();
+                var script = MonoScript.FromScriptableObject(tempInstance);
+                string path = AssetDatabase.GetAssetPath(script);
+                var subPath = path.Substring(0, path.LastIndexOf('/'));
+                subPath += "/UIBindPathSettings.asset";
+                configInstance = AssetDatabase.LoadAssetAtPath<BindUIGenerateConfig>(subPath);
+                if (configInstance == null)
+                {
+                    AssetDatabase.CreateAsset(tempInstance, subPath);
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.Refresh();
+                }
+                else
+                {
+                    DestroyImmediate(tempInstance);
+                }
+            }
+
+            return configInstance;
         }
     }
 }

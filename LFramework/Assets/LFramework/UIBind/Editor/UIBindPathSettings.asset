@@ -10,6 +10,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b62282b9393e3eb43affbc34e70338d2, type: 3}
-  m_Name: UIGenerateConfig
+  m_Name: UIBindPathSettings
   m_EditorClassIdentifier: 
-  codeGeneratePath: Assets/
+  codeGeneratePath: 

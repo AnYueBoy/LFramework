@@ -1,52 +1,49 @@
-﻿#if UNITY_EDITOR
-
-using System;
+﻿using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace LFramework
 {
     [ExecuteAlways]
-    public class RuntimeComponent : MonoBehaviour
+    public class UIProperty : MonoBehaviour
     {
-        public BindUIData[] bindDataArray;
+        public List<BindData> runtimeBindData;
+
+#if UNITY_EDITOR
+        private static Texture2D linkTexture;
+        private static List<BindData> editorBindDataList;
 
         [InitializeOnLoadMethod]
         private static void Load()
         {
+            linkTexture = EditorGUIUtility.IconContent("d_UnityEditor.FindDependencies").image as Texture2D;
             EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindowItemOnGUI;
         }
 
-        private static Texture2D linkTexture;
-
-        private void OnEnable()
+        protected void OnEnable()
         {
             UpdateReference();
-            linkTexture = EditorGUIUtility.IconContent("d_UnityEditor.FindDependencies").image as Texture2D;
         }
 
         public void UpdateReference()
         {
-            showBindDataList = bindDataArray;
+            editorBindDataList = runtimeBindData;
         }
-
-        private static BindUIData[] showBindDataList;
 
         private static void OnHierarchyWindowItemOnGUI(int instanceID, Rect selectionRect)
         {
-            if (showBindDataList == null)
+            if (editorBindDataList == null)
             {
                 return;
             }
 
-            int dataCount = showBindDataList.Length;
+            int dataCount = editorBindDataList.Count;
             var originColor = GUI.color;
 
             GUI.color = Color.green;
             for (int index = 0; index < dataCount; index++)
             {
-                var data = showBindDataList[index];
+                var data = editorBindDataList[index];
                 var bindObject = data.bindObject;
                 if (bindObject.GetInstanceID() == instanceID)
                 {
@@ -60,18 +57,6 @@ namespace LFramework
 
             GUI.color = originColor;
         }
-    }
-
-    [Serializable]
-    public class BindUIData
-    {
-        public string variableName;
-
-        // 绑定的组件
-        public Object bindComponent;
-
-        // 绑定组件所依赖的节点
-        public Object bindObject;
+#endif
     }
 }
-#endif

@@ -1,26 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using UnityEditor;
-using UnityEditor.Callbacks;
 using UnityEditorInternal;
 using UnityEngine;
 
 namespace LFramework
 {
-    [CustomEditor(typeof(RuntimeComponent))]
-    public class RuntimeComponentEditor : Editor
+    [CustomEditor(typeof(UIProperty))]
+    public class UIPropertyEditor : Editor
     {
-        private SerializedProperty bindData;
         private ReorderableList bindDataList;
-        private RuntimeComponent _runtimeComponent;
+        private UIProperty uiProperty;
 
         private void OnEnable()
         {
-            bindData = serializedObject.FindProperty("bindDataArray");
-            bindDataList = new ReorderableList(serializedObject, bindData, true, true, true, true);
+            var data = serializedObject.FindProperty("runtimeBindData");
+            bindDataList = new ReorderableList(serializedObject, data, true, true, true, true);
 
             bindDataList.drawHeaderCallback = DrawHeader;
             bindDataList.drawElementCallback = DrawListItems;
@@ -28,16 +24,8 @@ namespace LFramework
             bindDataList.onRemoveCallback = RemoveData;
         }
 
-        private ObjectInfo curOperateObject;
+        private BindData curOperateObject;
         private List<Rect> typeRectList;
-
-        private static bool isReloadScriptCompleted;
-
-        [DidReloadScripts]
-        static void OnScriptReloadCompleted()
-        {
-            isReloadScriptCompleted = true;
-        }
 
         public override void OnInspectorGUI()
         {
@@ -51,17 +39,11 @@ namespace LFramework
             {
                 GenerateBindCode();
             }
-
-            if (isReloadScriptCompleted && EditorPrefs.HasKey("ClassName"))
-            {
-                isReloadScriptCompleted = false;
-                AddObjectReference();
-            }
         }
 
         private void GenerateBindCode()
         {
-            var context = serializedObject.targetObject as RuntimeComponent;
+            var context = serializedObject.targetObject as UIProperty;
             var classUIName = context.gameObject.name;
             if (!classUIName.Contains("UI"))
             {
@@ -69,7 +51,7 @@ namespace LFramework
                 return;
             }
 
-            var classExtensionName = classUIName + "Extension";
+            var classExtensionName = classUIName + "Property";
             StringBuilder sb = new StringBuilder();
             HashSet<string> allNameSpace = new HashSet<string>();
             sb.Append("//此代码由程序自动生成切勿修改\n");
@@ -97,6 +79,21 @@ namespace LFramework
                 sb.Append("\t public " + variableTypeName + " " + variableName + ";\n");
             }
 
+            sb.Append("\t  protected override void InitializeProperty()\n  \t{\n");
+
+            for (int i = 0; i < dataCount; i++)
+            {
+                SerializedProperty addData =
+                    bindDataList.serializedProperty.GetArrayElementAtIndex(i);
+
+                string variableName = addData.FindPropertyRelative("variableName").stringValue;
+                object referenceObject = addData.FindPropertyRelative("bindComponent").objectReferenceValue;
+                // 变量名称
+                string variableTypeName = referenceObject.GetType().Name;
+                sb.Append($"\t  {variableName} = uiPropertyCache[\"{variableName}\"] as {variableTypeName};\n");
+            }
+
+            sb.Append("\n \t}");
             sb.Append("\n}");
 
             foreach (string namespaceStr in allNameSpace)
@@ -110,8 +107,9 @@ namespace LFramework
                 StringBuilder sbUI = new StringBuilder();
                 sbUI.Append("using UnityEngine;\n");
                 sbUI.Append("using UnityEngine.UI;\n");
+                sbUI.Append("using LFramework;\n");
 
-                sbUI.Append("public partial class " + classUIName + " : BindUI\n");
+                sbUI.Append("public partial class " + classUIName + " : BaseUI\n");
                 sbUI.Append("{\n");
                 sbUI.Append("\n}");
                 File.WriteAllText(uiFilePath, sbUI.ToString());
@@ -120,41 +118,8 @@ namespace LFramework
             string extensionFilePath =
                 BindUIGenerateConfig.GetSerializedObject().codeGeneratePath + classExtensionName + ".cs";
             File.WriteAllText(extensionFilePath, sb.ToString());
-            isReloadScriptCompleted = false;
-            EditorPrefs.SetString("ClassName", classUIName);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-        }
-
-        private void AddObjectReference()
-        {
-            var classUIName = EditorPrefs.GetString("ClassName");
-            EditorPrefs.DeleteKey("ClassName");
-            var context = serializedObject.targetObject as RuntimeComponent;
-            Assembly assembly = Assembly.Load("Assembly-CSharp");
-            Type type = assembly.GetType(classUIName);
-            var component = context.gameObject.GetComponent(type);
-            if (component != null)
-            {
-                DestroyImmediate(component);
-            }
-
-            component = context.gameObject.AddComponent(type);
-            int dataCount = bindDataList.count;
-            for (int i = 0; i < dataCount; i++)
-            {
-                SerializedProperty addData =
-                    bindDataList.serializedProperty.GetArrayElementAtIndex(i);
-
-                string variableName = addData.FindPropertyRelative("variableName").stringValue;
-                object referenceObject = addData.FindPropertyRelative("bindComponent").objectReferenceValue;
-                var componentType = component.GetType();
-                var componentProperty =
-                    componentType.GetField(variableName);
-                componentProperty.SetValue(component, referenceObject);
-            }
-
-            EditorUtility.SetDirty(context);
         }
 
         private void OnDragUpdate()
@@ -193,11 +158,31 @@ namespace LFramework
 
                             SerializedProperty addData =
                                 bindDataList.serializedProperty.GetArrayElementAtIndex(addIndex);
-                            addData.FindPropertyRelative("variableName").stringValue = curOperateObject.gameObject.name;
+                            addData.FindPropertyRelative("variableName").stringValue = curOperateObject.bindObject.name;
                             addData.FindPropertyRelative("bindComponent").objectReferenceValue =
-                                curOperateObject.components[index];
+                                curOperateObject.componentList[index];
+                            addData.FindPropertyRelative("curBindCompIndex").intValue = index;
                             addData.FindPropertyRelative("bindObject").objectReferenceValue =
-                                curOperateObject.gameObject;
+                                curOperateObject.bindObject;
+                            var comList = addData.FindPropertyRelative("componentList");
+                            var typeList = addData.FindPropertyRelative("typeList");
+                            comList.ClearArray();
+                            typeList.ClearArray();
+                            for (int i = 0; i < curOperateObject.componentList.Count; i++)
+                            {
+                                var comp = curOperateObject.componentList[i];
+                                var type = curOperateObject.typeList[i];
+                                comList.InsertArrayElementAtIndex(i);
+                                typeList.InsertArrayElementAtIndex(i);
+
+                                // 获取新添加的元素引用
+                                SerializedProperty compReference = comList.GetArrayElementAtIndex(i);
+                                SerializedProperty typeReference = typeList.GetArrayElementAtIndex(i);
+
+                                // 设置组件引用
+                                compReference.objectReferenceValue = comp;
+                                typeReference.stringValue = type;
+                            }
 
                             serializedObject.ApplyModifiedProperties();
                             UpdateLinkReference();
@@ -211,7 +196,6 @@ namespace LFramework
 
                 case EventType.DragExited:
                     curOperateObject = null;
-                    typeRectList = new List<Rect>();
                     break;
 
                 default:
@@ -229,10 +213,10 @@ namespace LFramework
             }
 
             GUILayout.BeginVertical();
-            var allTypes = curOperateObject.types;
+            var allTypes = curOperateObject.typeList;
 
             typeRectList = new List<Rect>();
-            for (var i = 0; i < allTypes.Length; i++)
+            for (var i = 0; i < allTypes.Count; i++)
             {
                 var r = GUILayoutUtility.GetRect(0f, 30f, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
                 typeRectList.Add(r);
@@ -263,25 +247,19 @@ namespace LFramework
             return -1;
         }
 
-        private ObjectInfo BuildObjectInfo(GameObject obj)
+        private BindData BuildObjectInfo(GameObject obj)
         {
-            var info = new ObjectInfo();
+            var info = new BindData();
 
-            var types = new List<string>();
-            var components = new List<Component>();
-
-            info.gameObject = obj;
+            info.bindObject = obj;
 
             var allComponent = obj.GetComponents(typeof(Component));
 
             foreach (var component in allComponent)
             {
-                types.Add(component.GetType().Name);
-                components.Add(component);
+                info.typeList.Add(component.GetType().Name);
+                info.componentList.Add(component);
             }
-
-            info.components = components.ToArray();
-            info.types = types.ToArray();
 
             return info;
         }
@@ -293,8 +271,8 @@ namespace LFramework
             EditorGUI.LabelField(rect, "Components");
         }
 
-        private readonly float itemWidth = 150;
-        private readonly float itemInterval = 20;
+        private readonly float itemWidth = 115f;
+        private readonly float itemInterval = 15;
 
         private void DrawListItems(Rect rect, int index, bool isActive, bool isFocused)
         {
@@ -303,25 +281,33 @@ namespace LFramework
                 new Rect(rect.x, rect.y, itemWidth, EditorGUIUtility.singleLineHeight),
                 element.FindPropertyRelative("variableName"), GUIContent.none);
 
+            var curBindComp = element.FindPropertyRelative("bindComponent");
             EditorGUI.PropertyField(
                 new Rect(rect.x + itemWidth + itemInterval, rect.y, itemWidth, EditorGUIUtility.singleLineHeight),
-                element.FindPropertyRelative("bindComponent"), GUIContent.none);
+                curBindComp, GUIContent.none);
+
+            var curBindCompIndex = element.FindPropertyRelative("curBindCompIndex").intValue;
+            var typeList = element.FindPropertyRelative("typeList");
+            string[] showTypeArray = new string[typeList.arraySize];
+            for (int i = 0; i < typeList.arraySize; i++)
+            {
+                var value = typeList.GetArrayElementAtIndex(i).stringValue;
+                showTypeArray[i] = value;
+            }
+
+            var result = EditorGUI.Popup(
+                new Rect(rect.x + itemWidth * 2f + itemInterval * 2f, rect.y, itemWidth,
+                    EditorGUIUtility.singleLineHeight),
+                curBindCompIndex, showTypeArray);
+
+            element.FindPropertyRelative("bindComponent").objectReferenceValue =
+                element.FindPropertyRelative("componentList").GetArrayElementAtIndex(result).objectReferenceValue;
+            element.FindPropertyRelative("curBindCompIndex").intValue = result;
         }
 
         private void AddData(ReorderableList list)
         {
             // 不允许通过手动添加数组中元素来进行组件的绑定
-
-            // int addIndex = bindDataList.count;
-            // bindDataList.serializedProperty.InsertArrayElementAtIndex(addIndex);
-            // SerializedProperty addData =
-            //     bindDataList.serializedProperty.GetArrayElementAtIndex(addIndex);
-            // addData.FindPropertyRelative("variableName").stringValue = "";
-            // addData.FindPropertyRelative("bindComponent").objectReferenceValue = null;
-            // addData.FindPropertyRelative("bindObject").objectReferenceValue = null;
-            // serializedObject.ApplyModifiedProperties();
-
-            // UpdateLinkReference();
         }
 
         private void RemoveData(ReorderableList list)
@@ -334,8 +320,7 @@ namespace LFramework
 
         private void UpdateLinkReference()
         {
-            var runtimeComp = serializedObject.targetObject as RuntimeComponent;
-            var test = bindData;
+            var runtimeComp = serializedObject.targetObject as UIProperty;
             runtimeComp.UpdateReference();
         }
 
@@ -345,12 +330,5 @@ namespace LFramework
         {
             // showBindDataList = null;
         }
-    }
-
-    public class ObjectInfo
-    {
-        public string[] types = { };
-        public Component[] components = { };
-        public GameObject gameObject;
     }
 }

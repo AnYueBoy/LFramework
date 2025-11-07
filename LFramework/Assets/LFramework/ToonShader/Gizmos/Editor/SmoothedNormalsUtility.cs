@@ -275,7 +275,7 @@ public class SmoothedNormalsUtility : EditorWindow
             else
             {
                 averageNormalsHash[newMesh.vertices[i]] =
-                    (averageNormalsHash[newMesh.vertices[i]] + newMesh.normals[i]).normalized;
+                    (averageNormalsHash[newMesh.vertices[i]] + newMesh.normals[i]);
             }
         }
 
@@ -283,7 +283,7 @@ public class SmoothedNormalsUtility : EditorWindow
         for (var i = 0; i < newMesh.vertexCount; i++)
         {
             // 对应顶点的平均（平滑）法线
-            averageNormals[i] = averageNormalsHash[newMesh.vertices[i]];
+            averageNormals[i] = averageNormalsHash[newMesh.vertices[i]].normalized;
         }
 
         // 存储到顶点色中
@@ -532,7 +532,7 @@ public class SmoothedNormalsUtility : EditorWindow
 
     public enum SmoothedNormalsChannel
     {
-        UV1 = 0,
+        UV1 = 1,
         UV2,
         UV3,
         UV4,

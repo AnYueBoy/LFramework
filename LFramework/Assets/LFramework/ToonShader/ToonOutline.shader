@@ -103,6 +103,7 @@ Shader "Unlit/ToonOutline"
                 float3 color : COLOR;
                 float2 uv : TEXCOORD0;
                 float3 normal: NORMAL;
+                float3 uv1:TEXCOORD1;
             };
 
             struct v2f
@@ -128,7 +129,7 @@ Shader "Unlit/ToonOutline"
                 v2f o;
                 float4 pos = TransformObjectToHClip(v.vertex);
                 // 将法线转到NDC空间
-                float3 worldNormal = TransformObjectToWorldNormal(v.normal);
+                float3 worldNormal = TransformObjectToWorldNormal(v.uv1);
                 float3 normalN = mul((float3x3)unity_MatrixVP, worldNormal);
                 normalN *= pos.w;
                 pos.xyz += 0.01 * _OutlineWidth * normalN;

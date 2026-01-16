@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 428e015ad5b7449c3b8598ca00c1b870
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: '{"mode":2,"width":947,"height":1073,"normalScaleFactor":1.0,"intensity":16.0,"invertX":false,"invertY":false,"sourceSprite":{"instanceID":0},"blurPx":0.0,"edgeWidthPx":192.0,"edgeCurve":8.0,"cornerRadiusPx":144.0,"enableTop":true,"enableBottom":true,"enableLeft":true,"enableRight":true,"maskScaleFactor":1.0,"maskMode":1,"maskTextureType":1,"hardThreshold":0.0,"maskGamma":10.0,"invertMask":false,"createOutline":false,"outlineThicknessPx":1.0,"lastSaveDir":"Assets/Lith/Liquid
+    Glass/Demo/Materials/glass blurry folder_textures","lastSaveName":"glass blurry
+    folder","bakeAuto":true}'
+  assetBundleName: 
+  assetBundleVariant: 

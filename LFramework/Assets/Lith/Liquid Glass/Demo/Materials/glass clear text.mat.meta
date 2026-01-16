@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: af05047d3cb5b486d9779b42ddb50ae1
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: '{"mode":2,"width":1024,"height":512,"normalScaleFactor":1.0,"intensity":8.0,"invertX":false,"invertY":false,"sourceSprite":{"instanceID":0},"blurPx":0.0,"edgeWidthPx":160.0,"edgeCurve":8.0,"cornerRadiusPx":128.0,"enableTop":true,"enableBottom":true,"enableLeft":true,"enableRight":true,"maskScaleFactor":1.0,"maskMode":1,"maskTextureType":1,"hardThreshold":0.0,"maskGamma":10.0,"invertMask":false,"createOutline":false,"outlineThicknessPx":1.0,"lastSaveDir":"Assets/Lith/Liquid
+    Glass/Demo/Materials/glass clear text_textures","lastSaveName":"glass clear text","bakeAuto":true}'
+  assetBundleName: 
+  assetBundleVariant: 

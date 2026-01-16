@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 45aff0057f7fb4e5a816db37b05ea046
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: '{"mode":2,"width":1242,"height":310,"normalScaleFactor":1.0,"intensity":2.5,"invertX":false,"invertY":false,"sourceSprite":{"instanceID":0},"blurPx":0.0,"edgeWidthPx":64.0,"edgeCurve":4.0,"cornerRadiusPx":155.0,"enableTop":true,"enableBottom":true,"enableLeft":true,"enableRight":true,"maskScaleFactor":1.0,"maskMode":1,"maskTextureType":1,"hardThreshold":0.0,"maskGamma":10.0,"invertMask":false,"createOutline":false,"outlineThicknessPx":1.0,"lastSaveDir":"Assets/Lith/Liquid
+    Glass/Demo/Materials/glass bar 1_textures","lastSaveName":"glass bar 1","bakeAuto":true}'
+  assetBundleName: 
+  assetBundleVariant: 

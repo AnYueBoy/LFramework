@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 4c2b80aa008104fbc972f1c17ec8e04a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: '{"mode":0,"width":512,"height":512,"normalScaleFactor":1.0,"intensity":32.0,"invertX":false,"invertY":false,"sourceSprite":{"instanceID":20702},"blurPx":2.0,"edgeWidthPx":32.0,"edgeCurve":4.0,"cornerRadiusPx":125.0,"enableTop":true,"enableBottom":true,"enableLeft":true,"enableRight":true,"maskScaleFactor":1.0,"maskMode":0,"maskTextureType":1,"hardThreshold":0.0,"maskGamma":10.0,"invertMask":false,"createOutline":false,"outlineThicknessPx":1.0,"lastSaveDir":"Assets/Lith/Liquid
+    Glass/Demo/Materials/lith liquid logo_textures","lastSaveName":"lith liquid logo","bakeAuto":true}'
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 658572903d14d4687ac9facba518c3ba
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: '{"mode":2,"width":1024,"height":512,"normalScaleFactor":1.0,"intensity":16.0,"invertX":false,"invertY":false,"sourceSprite":{"instanceID":0},"blurPx":0.0,"edgeWidthPx":160.0,"edgeCurve":8.0,"cornerRadiusPx":128.0,"enableTop":true,"enableBottom":true,"enableLeft":true,"enableRight":true,"maskScaleFactor":1.0,"maskMode":1,"maskTextureType":1,"hardThreshold":0.0,"maskGamma":10.0,"invertMask":false,"createOutline":false,"outlineThicknessPx":1.0,"lastSaveDir":"Assets/Lith/Liquid
+    Glass/Demo/Materials/glass video_textures","lastSaveName":"glass video","bakeAuto":true}'
+  assetBundleName: 
+  assetBundleVariant: 

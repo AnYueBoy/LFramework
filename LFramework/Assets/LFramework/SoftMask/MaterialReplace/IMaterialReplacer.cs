@@ -4,6 +4,6 @@ namespace LFramework.SoftMask
 {
     public interface IMaterialReplacer
     {
-        Material Replace(Material material);
+        Material Replace(Material originalMat);
     }
 }

@@ -137,5 +137,10 @@ namespace LFramework.SoftMask
 
             return baseMaterial;
         }
+
+        public void MaskingMightChanged()
+        {
+            // TODO:
+        }
     }
 }

@@ -41,15 +41,75 @@ namespace LFramework.SoftMask
             }
         }
 
-        // public void SpriteUsed(Sprite sprite,ErrorType error)
-        // {
-        //     if (_lastUsedSprite == sprite)
-        //     {
-        //         return;
-        //     }
-        //
-        //     _lastUsedSprite = sprite;
-        //     if((error& ))
-        // }
+        public void ImageUsed(Image image)
+        {
+            if (image == null)
+            {
+                _lastUsedImageSprite = null;
+                _lastUsedImageType = Image.Type.Simple;
+                return;
+            }
+
+            if (_lastUsedImageSprite == image.sprite && _lastUsedImageType == image.type)
+            {
+                return;
+            }
+
+            _lastUsedImageSprite = image.sprite;
+            _lastUsedImageType = image.type;
+            if (IsImageTypeSupported(image.type))
+            {
+                return;
+            }
+
+            Debug.LogWarning($"{_owner}不支持{image.type} 类型，使用Simple类型");
+        }
+
+        public ErrorType CheckSprite(Sprite sprite)
+        {
+            var result = ErrorType.NoError;
+            if (sprite == null)
+            {
+                return result;
+            }
+
+            if (sprite.packed && sprite.packingMode == SpritePackingMode.Tight)
+            {
+                result |= ErrorType.TightPackedSprite;
+            }
+
+            if (sprite.associatedAlphaSplitTexture != null)
+            {
+                result |= ErrorType.AlphaSplitSprite;
+            }
+
+            return result;
+        }
+
+        public void SpriteUsed(Sprite sprite, ErrorType error)
+        {
+            if (_lastUsedSprite == sprite)
+            {
+                return;
+            }
+
+            _lastUsedSprite = sprite;
+            if ((error & ErrorType.TightPackedSprite) != 0)
+            {
+                Debug.LogError($"SoftMask 不支持 tight packed 的sprite");
+            }
+
+            if ((error & ErrorType.AlphaSplitSprite) != 0)
+            {
+                Debug.LogError($"SoftMask 不支持透明通道分离的sprite");
+            }
+        }
+
+        private bool IsImageTypeSupported(Image.Type type)
+        {
+            return type == Image.Type.Simple
+                   || type == Image.Type.Sliced
+                   || type == Image.Type.Tiled;
+        }
     }
 }

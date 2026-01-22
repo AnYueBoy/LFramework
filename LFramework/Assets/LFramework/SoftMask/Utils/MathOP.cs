@@ -14,6 +14,21 @@ namespace LFramework.SoftMask
             return new Vector2(v.x / s.x, v.y / s.y);
         }
 
+        public static Vector4 Div(Vector4 v, Vector2 s)
+        {
+            return new Vector4(v.x / s.x, v.y / s.y, v.z / s.x, v.w / s.y);
+        }
+
+        public static Vector4 Mul(Vector4 v, Vector2 s)
+        {
+            return new Vector4(v.x * s.x, v.y * s.y, v.z * s.x, v.w * s.y);
+        }
+
+        public static Vector2 Size(Vector4 r)
+        {
+            return new Vector2(r.z - r.x, r.w - r.y);
+        }
+
         private static Vector2 Min(Vector4 r)
         {
             return new Vector2(r.x, r.y);

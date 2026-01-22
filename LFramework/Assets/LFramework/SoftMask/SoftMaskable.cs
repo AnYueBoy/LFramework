@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -21,7 +23,6 @@ namespace LFramework.SoftMask
             && _bindMask.IsMaskingEnable
             && _affectedByMask
             && IsGraphicMaskable;
-
 
         public ISoftMask BindMask
         {
@@ -64,7 +65,6 @@ namespace LFramework.SoftMask
             }
         }
 
-
         private bool IsGraphicMaskable
         {
             get
@@ -104,6 +104,50 @@ namespace LFramework.SoftMask
             }
         }
 
+        protected override void Awake()
+        {
+            base.Awake();
+            hideFlags = HideFlags.HideInHierarchy;
+        }
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            if (FindMaskOrDie())
+            {
+                RequestChildTransformUpdate();
+            }
+        }
+
+        protected override void OnTransformParentChanged()
+        {
+            base.OnTransformParentChanged();
+            FindMaskOrDie();
+        }
+
+        protected override void OnCanvasHierarchyChanged()
+        {
+            base.OnCanvasHierarchyChanged();
+            FindMaskOrDie();
+        }
+
+        private void OnTransformChildrenChanged()
+        {
+            RequestChildTransformUpdate();
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            BindMask = null;
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            Destroyed = true;
+        }
+
         private void Invalidate()
         {
             if (Graphic != null)
@@ -140,7 +184,105 @@ namespace LFramework.SoftMask
 
         public void MaskingMightChanged()
         {
-            // TODO:
+            if (FindMaskOrDie())
+            {
+                Invalidate();
+            }
+        }
+
+        private bool FindMaskOrDie()
+        {
+            if (Destroyed)
+            {
+                return false;
+            }
+
+            BindMask = NearestMask(transform) ?? NearestMask(transform, false);
+            if (BindMask == null)
+            {
+                Destroyed = true;
+                DestroySelf();
+                return false;
+            }
+
+            return true;
+        }
+
+        private ISoftMask NearestMask(Transform transform, bool enableOnly = true)
+        {
+            _affectedByMask = true;
+            var current = transform;
+            while (true)
+            {
+                if (current == null)
+                {
+                    return null;
+                }
+
+                if (current != transform)
+                {
+                    var mask = GetISoftMask(current, enableOnly);
+                    if (mask != null)
+                    {
+                        return mask;
+                    }
+                }
+
+                if (IsOverridingSortingCanvas(current))
+                {
+                    _affectedByMask = false;
+                }
+
+                current = current.parent;
+            }
+        }
+
+        private static readonly List<ISoftMask> _softMaskTempList = new List<ISoftMask>();
+
+        private ISoftMask GetISoftMask(Transform current, bool shouldEnable = true)
+        {
+            _softMaskTempList.Clear();
+            current.GetComponents(_softMaskTempList);
+            var mask = _softMaskTempList.Count > 0 ? _softMaskTempList[0] : null;
+
+            if (mask != null && mask.IsAlive && (!shouldEnable || mask.IsMaskingEnable))
+            {
+                return mask;
+            }
+
+            return null;
+        }
+
+        private static readonly List<Canvas> _canvasTempList = new List<Canvas>();
+
+        private bool IsOverridingSortingCanvas(Transform transform)
+        {
+            _canvasTempList.Clear();
+            transform.GetComponents(_canvasTempList);
+            var canvas = _canvasTempList.Count > 0 ? _canvasTempList[0] : null;
+            if (canvas != null && canvas.overrideSorting)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private void RequestChildTransformUpdate()
+        {
+            BindMask?.UpdateTransformChildren(transform);
+        }
+
+        private void DestroySelf()
+        {
+            if (Application.isPlaying)
+            {
+                Destroy(this);
+            }
+            else
+            {
+                DestroyImmediate(this);
+            }
         }
     }
 }

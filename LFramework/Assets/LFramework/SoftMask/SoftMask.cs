@@ -408,6 +408,11 @@ namespace LFramework.SoftMask
             _materialReplacement.Release(replaceMat);
         }
 
+        public void UpdateTransformChildren(Transform transform)
+        {
+            MarkTransformForMaskableSpawn(transform);
+        }
+
         private void MatParameterHandler(Material material)
         {
             _matParameters.Apply(material);
@@ -768,7 +773,7 @@ namespace LFramework.SoftMask
                 for (int j = 0; j < _softMaskableTmpList.Count; j++)
                 {
                     var maskable = _softMaskableTmpList[j];
-                    if (maskable == null || maskable.IsDestroyed())
+                    if (maskable == null || maskable.Destroyed)
                     {
                         continue;
                     }

@@ -11,5 +11,7 @@ namespace LFramework.SoftMask
         Material GetReplaceMat(Material originalMat);
 
         void ReleaseReplaceMat(Material replaceMat);
+        
+        void UpdateTransformChildren(Transform transform);
     }
 }

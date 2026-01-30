@@ -1,19 +1,82 @@
-#ifndef SOFTMASK_INCLUDE
+Shader "Hidden/SoftMask"
+{
+    Properties
+    {
+        _MainTex ("Texture", 2D) = "white" {}
+    }
+    SubShader
+    {
+        // No culling or depth
+        Cull Off ZWrite Off ZTest Always
 
-#define SOFTMASK_INCLUDE
+        Pass
+        {
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
 
-#include "UnityUI.cginc"
+            #include "UnityCG.cginc"
 
-#if defined(SOFTMASK_SIMPLE) || define(SOFTMASK_SLICED) || define(SOFTMASK_TILED)
+            struct appdata
+            {
+                float4 vertex : POSITION;
+                float2 uv : TEXCOORD0;
+            };
+
+            struct v2f
+            {
+                float2 uv : TEXCOORD0;
+                float4 vertex : SV_POSITION;
+            };
+
+            v2f vert(appdata v)
+            {
+                v2f o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.uv = v.uv;
+                return o;
+            }
+
+            sampler2D _MainTex;
+
+            fixed4 frag(v2f i) : SV_Target
+            {
+                fixed4 col = tex2D(_MainTex, i.uv);
+                // just invert the colors
+                col = 1 - col;
+                return col;
+            }
+            ENDCG
+        }
+    }
+
+
+    SubShader
+    {
+        Pass
+        {
+            CGPROGRAM
+            #define SOFTMASK_SIMPLE
+            #define SOFTMASK_SLICED
+            #define SOFTMASK_TILED
+            // -----------------------------------------------------------------------------------------------------
+
+            #ifndef SOFTMASK_INCLUDE
+
+            #define SOFTMASK_INCLUDE
+
+            #include "UnityUI.cginc"
+
+            #if defined(SOFTMASK_SIMPLE) || define(SOFTMASK_SLICED) || define(SOFTMASK_TILED)
             # define __SOFTMASK_ENABLE
-# if defined(SOFTMASK_SLICED) || define(SOFTMASK_TILED)
+            # if defined(SOFTMASK_SLICED) || define(SOFTMASK_TILED)
             # define __SOFTMASK_USE_BORDER
 
-#endif
+            #endif
 
-#endif
+            #endif
 
-#ifdef __SOFTMASK_ENABLE
+            #ifdef __SOFTMASK_ENABLE
 
             #define SOFTMASK_COORDS(idx) float maskPosition: TEXCOORD ## idx;
             #define SOFTMASK_CALCULATE_COORDS(OUT,pos) (OUT).maskPosition = mul(_SoftMask_WorldToMask,pos);
@@ -25,15 +88,15 @@
             float4x4 _SoftMask_WorldToMask;
             float4 _SoftMask_ChannelWeights;
 
-#ifdef __SOFTMASK_USE_BORDER
+            #ifdef __SOFTMASK_USE_BORDER
 
             float4 _SoftMask_BorderRect;
             float4 _SoftMask_UVBoarderRect;
-#endif
+            #endif
 
-#ifdef SOFTMASK_TILED
+            #ifdef SOFTMASK_TILED
             float2 _SoftMask_TileRepeat;
-#endif
+            #endif
 
             bool _SoftMask_InvertMask;
             bool _SoftMask_InvertOutsides;
@@ -51,7 +114,7 @@
                 return lerp(u1, u2, (w != 0.0f) ? (a - a1) / w : 0.0f);
             }
 
-#ifdef __SOFTMASK_USE_BORDER
+            #ifdef __SOFTMASK_USE_BORDER
             inline float2 __SoftMask_XY2UV(
                 float2 a,
                 float2 a1, float2 a2, float2 a3, float2 a4,
@@ -69,9 +132,9 @@
                 float2 uu1 = u1 * s1i2i + u2 * s12i + u3 * s12;
                 float2 uu2 = u2 * s1i2i + u3 * s12i + u4 * s12;
                 return __SoftMask_Inset(a, aa1, aa2, uu1, uu2
-#if  SOFTMASK_TILED
+                                        #if  SOFTMASK_TILED
                                         , s12i*_SoftMask_TileRepeat
-#endif
+                                        #endif
 
                 );
             }
@@ -95,7 +158,7 @@
                         _SoftMask_UVRect.xy, _SoftMask_UVRect.zw
                     );
             }
-#else
+            #else
             inline float2 SoftMask_GetMaskUV(float2 maskPosition)
             {
                 return
@@ -106,7 +169,7 @@
                     );
             }
 
-#endif
+            #endif
 
             inline float4 SoftMask_GetMaskTexture(float2 maskPosition)
             {
@@ -124,14 +187,18 @@
                 return lerp(maskOutsideRect, maskInsideRect, isInsideRect);
             }
 
-#else
+            #else
 
-#define SOFTMASK_COORDS(idx)
-#define SOFTMASK_CALCULATE_COORDS(OUT,pos)
-#define SOFTMASK_GET_MASK(IN)   (1.0)
+            #define SOFTMASK_COORDS(idx)
+            #define SOFTMASK_CALCULATE_COORDS(OUT,pos)
+            #define SOFTMASK_GET_MASK(IN)   (1.0)
 
-inline float4 SoftMask_GetMaskTexture(float2 maskPosition) { return 1.0f; }
-inline float SoftMask_GetMask(float2 maskPosition) { return 1.0f; }
-#endif
+            inline  float4 SoftMask_GetMaskTexture(float2 maskPosition){return 1.0f;}
+            inline float SoftMask_GetMask(float2 maskPosition){return 1.0f;}
+            #endif
 
-#endif
+            #endif
+            ENDCG
+        }
+    }
+}

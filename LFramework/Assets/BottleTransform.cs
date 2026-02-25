@@ -249,7 +249,9 @@ public class BottleTransform : MonoBehaviour
             float step = i / 100f;
             var samplePoint = new Vector3(minX + step, point1.y, 0f);
             var sampleUV = ConvertToUV(samplePoint);
-            var index = Mathf.FloorToInt((int)(sampleUV.y * height) * width + sampleUV.x * width);
+            var readHeight = (int)(sampleUV.y * height);
+            readHeight = Mathf.Min(height - 1, readHeight);
+            var index = Mathf.FloorToInt(readHeight * width + sampleUV.x * width);
 
             var pixelData = _pixelDataArray[index];
             if (pixelData.color.a <= 0)
@@ -261,12 +263,12 @@ public class BottleTransform : MonoBehaviour
 
                 if (prePixelType != PixelType.Empty)
                 {
-                    var preX = minX + step - pixelCount;
+                    var preX = minX + step - pixelCount / 100f;
                     var preSamplePoint = new Vector3(preX, point1.y, 0f);
                     var preSampleUV = ConvertToUV(preSamplePoint);
                     var centerUVPoint = Vector2.Lerp(preSampleUV, sampleUV, 0.5f);
                     var longRadius = (sampleUV - preSampleUV).magnitude;
-                    var arc = Mathf.Deg2Rad * transform.eulerAngles.z;
+                    var arc = -Mathf.Deg2Rad * transform.eulerAngles.z;
                     ellipseInfoArray[dataIndex++] = new Vector4(centerUVPoint.x, centerUVPoint.y, longRadius, arc);
                 }
 
@@ -283,7 +285,9 @@ public class BottleTransform : MonoBehaviour
 
         var lastSamplePoint = new Vector3(minX + (horizontal - 1) / 100f, point1.y, 0f);
         var lastSampleUV = ConvertToUV(lastSamplePoint);
-        var lastIndex = Mathf.FloorToInt((int)(lastSampleUV.y * height) * width + lastSampleUV.x * width);
+        var lastRealHeight = (int)(lastSampleUV.y * height);
+        lastRealHeight = Mathf.Min(lastRealHeight, height - 1);
+        var lastIndex = Mathf.FloorToInt(lastRealHeight * width + lastSampleUV.x * width);
         var lastPixelData = _pixelDataArray[lastIndex];
         if (lastPixelData.color.a > 0)
         {
@@ -292,7 +296,7 @@ public class BottleTransform : MonoBehaviour
             var preSampleUV = ConvertToUV(preSamplePoint);
             var centerUVPoint = Vector2.Lerp(preSampleUV, lastSampleUV, 0.5f);
             var longRadius = (lastSampleUV - preSampleUV).magnitude;
-            var arc = Mathf.Deg2Rad * transform.eulerAngles.z;
+            var arc = -Mathf.Deg2Rad * transform.eulerAngles.z;
             ellipseInfoArray[dataIndex] = new Vector4(centerUVPoint.x, centerUVPoint.y, longRadius, arc);
         }
 

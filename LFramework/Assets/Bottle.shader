@@ -127,6 +127,7 @@ Shader "Unlit/Bottle"
                 if (value <= 0)
                 {
                     col.a = 1.0f;
+                    col.rgb = float3(1, 0, 0);
                 }
                 return col;
             }

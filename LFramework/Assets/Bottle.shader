@@ -3,12 +3,7 @@ Shader "Unlit/Bottle"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
-        _LineK("LineK",float) =1
-        _LineB("LineB",float) =0
-        _LineT("LineT",int) =0
-        _Angle("Angle",Float) =0
         _ShortRadius("ShortRadius",Float) = 0.5
-        _EllipseCount("EllipseCount",int) = 1
         _EllipseColor("_EllipseColor",Color) = (1,0,0,1)
 
     }

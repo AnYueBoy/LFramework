@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-// [ExecuteInEditMode]
 public class BottleTransform : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer _srComp;
@@ -147,34 +146,10 @@ public class BottleTransform : MonoBehaviour
         }
     }
 
-    private void InitializeBoundPoint()
-    {
-    }
-
-    private void CalculateFillAmount()
-    {
-        for (int i = 0; i < height; i++)
-        {
-            for (int j = 0; j < width; j++)
-            {
-                var index = i * width + j;
-            }
-        }
-    }
-
     public void SetFillAmount(float value)
     {
         fillAmount = Mathf.Clamp(value, 0.01f, 0.99f);
         UpdateWorldBoundPos();
-    }
-
-    public void UpdatePixelPos()
-    {
-        for (int i = 0; i < _pixelDataArray.Length; i++)
-        {
-            var pixelData = _pixelDataArray[i];
-            pixelData.worldPos = transform.TransformPoint(pixelData.localPos);
-        }
     }
 
     [Button("角度更新")]
@@ -188,9 +163,6 @@ public class BottleTransform : MonoBehaviour
         minY = Mathf.Min(lbWorldPoint.y, rbWorldPoint.y, ltWorldPoint.y, rtWorldPoint.y);
         maxY = Mathf.Max(lbWorldPoint.y, rbWorldPoint.y, ltWorldPoint.y, rtWorldPoint.y);
 
-        // var localFillPos = new Vector3(0f, -height / 100f * 0.5f + fillAmount * height / 100f, 0f);
-        // var worldFillPos = transform.position.y - 0.1f;
-        // var worldY = Mathf.Lerp(minY, maxY, Mathf.Clamp01(fillAmount));
         var worldY = CalculateFillVolume();
         GenerateIntersectPoints(worldY);
         var uv1 = ConvertToUV(intersectPointList[0]);
@@ -333,12 +305,6 @@ public class BottleTransform : MonoBehaviour
         {
             intersectPointList.Add(topIntersectPoint.Value);
         }
-    }
-
-    private float executeWorldY;
-
-    private void CalculateY()
-    {
     }
 
     private float CalculateFillVolume()

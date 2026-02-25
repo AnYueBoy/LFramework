@@ -352,7 +352,7 @@ public class BottleTransform : MonoBehaviour
         var realVolume = (int)(Mathf.Clamp01(fillAmount) * effectVolume);
 
         int cumulativeVolume = 0;
-        var count = Mathf.FloorToInt((maxY - minY) * 100f);
+        var count = (int)((maxY - minY) * 100f);
         for (int i = 0; i < count; i++)
         {
             var yStep = i / 100f;
@@ -426,14 +426,15 @@ public class BottleTransform : MonoBehaviour
         return maxY;
     }
 
+    private const float referenceValue = 0.0001f;
     private Vector3? CalculateIntersectPoint(Vector3 firstPoint, Vector3 secondPoint, float y)
     {
-        if (Mathf.Approximately(secondPoint.x, firstPoint.x))
+        if (Abs(secondPoint.x - firstPoint.x) < referenceValue)
         {
             return new Vector3(firstPoint.x, y, 0f);
         }
-
-        if (Mathf.Approximately(secondPoint.y, firstPoint.y))
+        
+        if (Abs(secondPoint.y - firstPoint.y) < referenceValue)
         {
             return null;
         }
@@ -449,6 +450,16 @@ public class BottleTransform : MonoBehaviour
         }
 
         return new Vector3(x, y, 0);
+    }
+
+    private float Abs(float value)
+    {
+        if (value >= 0)
+        {
+            return value;
+        }
+
+        return -value;
     }
 
     private enum PixelType

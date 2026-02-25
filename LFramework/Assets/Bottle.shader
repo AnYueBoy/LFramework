@@ -9,6 +9,7 @@ Shader "Unlit/Bottle"
         _Angle("Angle",Float) =0
         _ShortRadius("ShortRadius",Float) = 0.5
         _EllipseCount("EllipseCount",int) = 1
+        _EllipseColor("_EllipseColor",Color) = (1,0,0,1)
 
     }
     SubShader
@@ -55,6 +56,7 @@ Shader "Unlit/Bottle"
             float4 _EllipseInfoArray[32];
             float _ShortRadius;
             int _EllipseCount;
+            float4 _EllipseColor;
 
             inline float LineEquation(float2 uv)
             {
@@ -136,11 +138,8 @@ Shader "Unlit/Bottle"
                     EllipseEquation(3, i.uv) *
                     EllipseEquation(4, i.uv);
 
-                if (value <= 0)
-                {
-                    col.a = 1.0f;
-                    col.rgb = float3(1, 0, 0);
-                }
+                col.rgb = lerp(_EllipseColor.rgb, col.rgb, step(0, value));
+                col.a = lerp(1.0f, col.a, step(0, value));
                 return col;
             }
             ENDCG

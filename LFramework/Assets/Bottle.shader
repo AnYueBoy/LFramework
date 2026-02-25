@@ -75,12 +75,14 @@ Shader "Unlit/Bottle"
                 return _LineK * uv.x + _LineB - uv.y < 0;
             }
 
-            float EllipseEquation(int index, float4 ellipseInfo, float2 uv)
+            float EllipseEquation(int index, float2 uv)
             {
                 if (index >= _EllipseCount)
                 {
                     return 1;
                 }
+
+                float4 ellipseInfo = _EllipseInfoArray[index];
                 float x0 = ellipseInfo.x;
                 float y0 = ellipseInfo.y;
                 float a = ellipseInfo.z * 0.5;
@@ -130,11 +132,11 @@ Shader "Unlit/Bottle"
                 }
 
                 float value =
-                    EllipseEquation(0, _EllipseInfoArray[0], i.uv) *
-                    EllipseEquation(1, _EllipseInfoArray[1], i.uv) *
-                    EllipseEquation(2, _EllipseInfoArray[2], i.uv) *
-                    EllipseEquation(3, _EllipseInfoArray[3], i.uv) *
-                    EllipseEquation(4, _EllipseInfoArray[4], i.uv);
+                    EllipseEquation(0, i.uv) *
+                    EllipseEquation(1, i.uv) *
+                    EllipseEquation(2, i.uv) *
+                    EllipseEquation(3, i.uv) *
+                    EllipseEquation(4, i.uv);
 
                 if (value <= 0)
                 {

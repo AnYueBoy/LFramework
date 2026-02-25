@@ -29,11 +29,12 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Angle: 270.8501
-    - _EllipseCount: 3
-    - _LineB: -1.4173828
-    - _LineK: 41.51636
+    - _Angle: 42.234467
+    - _EllipseCount: 1
+    - _LineB: 0.66106313
+    - _LineK: -0.5592609
     - _LineT: 0
     - _ShortRadius: 0.07
-    m_Colors: []
+    m_Colors:
+    - _EllipseColor: {r: 1, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []

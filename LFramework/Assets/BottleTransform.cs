@@ -31,8 +31,7 @@ public class BottleTransform : MonoBehaviour
         initialized = true;
     }
 
-    [Button("初始化")]
-    public void Initialize()
+    private void Initialize()
     {
         var spriteAsset = _srComp.sprite;
         width = (int)spriteAsset.rect.width;
@@ -44,9 +43,8 @@ public class BottleTransform : MonoBehaviour
 
     [SerializeField] private int examinePixelCount = 2;
 
-    private void CompatiblePixel(Sprite spriteAsset)
+    private void CompatiblePixel()
     {
-        pixelArray = spriteAsset.texture.GetPixels32();
         for (int i = 0; i < height; i++)
         {
             for (int j = 0; j < width; j++)
@@ -93,8 +91,10 @@ public class BottleTransform : MonoBehaviour
 
     private void InitializePixelData(Sprite spriteAsset)
     {
+        pixelArray = spriteAsset.texture.GetPixels32();
+
         // 兼容处理像素信息
-        CompatiblePixel(spriteAsset);
+        CompatiblePixel();
 
         for (int i = 0; i < height; i++)
         {
@@ -119,6 +119,7 @@ public class BottleTransform : MonoBehaviour
         rtLocalPoint = new Vector3(spriteSize.x / 2f, spriteSize.y / 2f, 0f);
 
         UpdateWorldBoundPos();
+        preAngle = transform.eulerAngles.z;
     }
 
     private float preAngle = -1;
@@ -153,6 +154,14 @@ public class BottleTransform : MonoBehaviour
         minY = Mathf.Min(lbWorldPoint.y, rbWorldPoint.y, ltWorldPoint.y, rtWorldPoint.y);
         maxY = Mathf.Max(lbWorldPoint.y, rbWorldPoint.y, ltWorldPoint.y, rtWorldPoint.y);
 
+        CalculateWaterParams();
+    }
+
+    private void CalculateWaterParams()
+    {
+        // 计算水参数
+
+        // 计算水面参数
         var worldY = CalculateFillVolume();
         GenerateIntersectPoints(worldY);
         var uv1 = ConvertToUV(intersectPointList[0]);
@@ -187,6 +196,7 @@ public class BottleTransform : MonoBehaviour
         bottleMat.SetInt("_LineT", t);
         bottleMat.SetFloat("_Angle", transform.eulerAngles.z);
 
+        // 计算水面椭圆参数
         if (intersectPointList.Count >= 2)
         {
             CalculateEllipse(intersectPointList[0], intersectPointList[1], arc);

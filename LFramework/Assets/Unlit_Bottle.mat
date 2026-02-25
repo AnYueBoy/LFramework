@@ -29,9 +29,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Angle: 37.99999
-    - _LineB: NaN
-    - _LineK: NaN
+    - _Angle: 8.751627
+    - _EllipseCount: 1
+    - _LineB: 0.41410407
+    - _LineK: -0.094834566
     - _LineT: 0
     - _ShortRadius: 0.07
     m_Colors: []

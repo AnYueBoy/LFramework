@@ -8,6 +8,7 @@ Shader "Unlit/Bottle"
         _LineT("LineT",int) =0
         _Angle("Angle",Float) =0
         _ShortRadius("ShortRadius",Float) = 0.5
+        _EllipseCount("EllipseCount",int) = 1
 
     }
     SubShader
@@ -53,6 +54,7 @@ Shader "Unlit/Bottle"
             float _Angle;
             float4 _EllipseInfoArray[32];
             float _ShortRadius;
+            int _EllipseCount;
 
             bool CheckLine(float2 uv)
             {
@@ -73,8 +75,12 @@ Shader "Unlit/Bottle"
                 return _LineK * uv.x + _LineB - uv.y < 0;
             }
 
-            float EllipseEquation(float4 ellipseInfo, float2 uv)
+            float EllipseEquation(int index, float4 ellipseInfo, float2 uv)
             {
+                if (index >= _EllipseCount)
+                {
+                    return 1;
+                }
                 float x0 = ellipseInfo.x;
                 float y0 = ellipseInfo.y;
                 float a = ellipseInfo.z * 0.5;
@@ -123,7 +129,13 @@ Shader "Unlit/Bottle"
                     col.a = 0;
                 }
 
-                float value = EllipseEquation(_EllipseInfoArray[0], i.uv);
+                float value =
+                    EllipseEquation(0, _EllipseInfoArray[0], i.uv) *
+                    EllipseEquation(1, _EllipseInfoArray[1], i.uv) *
+                    EllipseEquation(2, _EllipseInfoArray[2], i.uv) *
+                    EllipseEquation(3, _EllipseInfoArray[3], i.uv) *
+                    EllipseEquation(4, _EllipseInfoArray[4], i.uv);
+
                 if (value <= 0)
                 {
                     col.a = 1.0f;

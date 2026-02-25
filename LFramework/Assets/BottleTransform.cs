@@ -264,9 +264,10 @@ public class BottleTransform : MonoBehaviour
             var preSampleUV = ConvertToUV(preSamplePoint);
             var centerUVPoint = Vector2.Lerp(preSampleUV, lastSampleUV, 0.5f);
             var longRadius = (lastSampleUV - preSampleUV).magnitude;
-            ellipseInfoArray[dataIndex] = new Vector4(centerUVPoint.x, centerUVPoint.y, longRadius, arc);
+            ellipseInfoArray[dataIndex++] = new Vector4(centerUVPoint.x, centerUVPoint.y, longRadius, arc);
         }
 
+        bottleMat.SetInt("_EllipseCount", dataIndex);
         bottleMat.SetVectorArray("_EllipseInfoArray", ellipseInfoArray);
     }
 

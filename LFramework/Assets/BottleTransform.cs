@@ -345,9 +345,8 @@ public class BottleTransform : MonoBehaviour
                 var xStep = j / 100f;
                 var samplePoint = new Vector3(minX + xStep, y, 0f);
                 var sampleUV = ConvertToUV(samplePoint);
-                var readHeight = (int)(sampleUV.y * height);
-                readHeight = Mathf.Min(height - 1, readHeight);
-                var index = Mathf.FloorToInt(readHeight * width + sampleUV.x * width);
+                var realHeight = (int)(sampleUV.y * height);
+                var index = Mathf.FloorToInt(realHeight * width + sampleUV.x * width);
                 index = Mathf.Clamp(index, 0, pixelArray.Length - 1);
 
                 var pixel = pixelArray[index];

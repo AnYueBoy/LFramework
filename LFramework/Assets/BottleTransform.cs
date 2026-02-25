@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-[ExecuteInEditMode]
+// [ExecuteInEditMode]
 public class BottleTransform : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer _srComp;
     [SerializeField] private Material bottleMat;
 
-    [SerializeField] private float fillAmount = 0.5f;
+    [SerializeField] [OnValueChanged(nameof(UpdateWorldBoundPos))] [MinValue(0f)] [MaxValue(1f)]
+    private float fillAmount = 0.5f;
+
     private int width, height;
     private PixelData[] _pixelDataArray;
 
@@ -36,13 +38,66 @@ public class BottleTransform : MonoBehaviour
         width = (int)spriteAsset.rect.width;
         height = (int)spriteAsset.rect.height;
         _pixelDataArray = new PixelData[width * height];
+        ellipseInfoArray = new Vector4[32];
 
         InitializePixelData(spriteAsset);
     }
 
-    private void InitializePixelData(Sprite spriteAsset)
+    [SerializeField] private int examinePixelCount = 2;
+
+    private Color32[] CompatiblePixel(Sprite spriteAsset)
     {
         var pixelArray = spriteAsset.texture.GetPixels32();
+        for (int i = 0; i < height; i++)
+        {
+            for (int j = 0; j < width; j++)
+            {
+                var index = i * width + j;
+                int emptyPixelCount = 0;
+                int nonEmptyPixelCount = 0;
+                int leftIndex = index - examinePixelCount;
+                if (leftIndex <= i * width)
+                {
+                    leftIndex = i * width;
+                }
+
+                int rightIndex = index + examinePixelCount;
+                if (rightIndex >= (i + 1) * width - 1)
+                {
+                    rightIndex = (i + 1) * width - 1;
+                }
+
+                for (int k = leftIndex; k <= rightIndex; k++)
+                {
+                    var examinePixel = pixelArray[k];
+                    if (examinePixel.a <= 0)
+                    {
+                        emptyPixelCount++;
+                    }
+                    else
+                    {
+                        nonEmptyPixelCount++;
+                    }
+                }
+
+                if (emptyPixelCount > nonEmptyPixelCount)
+                {
+                    pixelArray[index].a = 0;
+                }
+                else
+                {
+                    pixelArray[index].a = 255;
+                }
+            }
+        }
+
+        return pixelArray;
+    }
+
+    private void InitializePixelData(Sprite spriteAsset)
+    {
+        // 兼容处理像素信息
+        var pixelArray = CompatiblePixel(spriteAsset);
         var spriteSize = spriteAsset.bounds.size;
 
         for (int i = 0; i < height; i++)
@@ -50,6 +105,7 @@ public class BottleTransform : MonoBehaviour
             for (int j = 0; j < width; j++)
             {
                 var index = i * width + j;
+
                 var pixel = pixelArray[index];
                 float localX = (j / (float)width - 0.5f) * spriteSize.x;
                 float localY = (i / (float)height - 0.5f) * spriteSize.y;
@@ -118,7 +174,9 @@ public class BottleTransform : MonoBehaviour
         minY = Mathf.Min(lbWorldPoint.y, rbWorldPoint.y, ltWorldPoint.y, rtWorldPoint.y);
         maxY = Mathf.Max(lbWorldPoint.y, rbWorldPoint.y, ltWorldPoint.y, rtWorldPoint.y);
 
-        var worldY = transform.position.y;
+        // var localFillPos = new Vector3(0f, -height / 100f * 0.5f + fillAmount * height / 100f, 0f);
+        // var worldFillPos = transform.position.y - 0.1f;
+        var worldY = Mathf.Lerp(minY, maxY, Mathf.Clamp01(fillAmount));
         var bottomIntersectPoint = CalculateIntersectPoint(lbWorldPoint, rbWorldPoint, worldY);
         var leftIntersectPoint = CalculateIntersectPoint(lbWorldPoint, ltWorldPoint, worldY);
         var rightIntersectPoint = CalculateIntersectPoint(rbWorldPoint, rtWorldPoint, worldY);
@@ -172,13 +230,79 @@ public class BottleTransform : MonoBehaviour
         bottleMat.SetFloat("_LineK", k);
         bottleMat.SetFloat("_LineB", b);
         bottleMat.SetInt("_LineT", t);
-        bottleMat.SetFloat("_Angle",  transform.eulerAngles.z);
+        bottleMat.SetFloat("_Angle", transform.eulerAngles.z);
+
+        CalculateEllipse(nonNullPointList[0], nonNullPointList[1]);
+    }
+
+    private Vector4[] ellipseInfoArray;
+
+    private void CalculateEllipse(Vector3 point1, Vector3 point2)
+    {
+        int horizontal = Mathf.FloorToInt(Mathf.Abs(point2.x - point1.x) * 100f);
+        float minX = Mathf.Min(point1.x, point2.x);
+        int pixelCount = 0;
+        PixelType prePixelType = PixelType.None;
+        int dataIndex = 0;
+        for (int i = 0; i < horizontal; i++)
+        {
+            float step = i / 100f;
+            var samplePoint = new Vector3(minX + step, point1.y, 0f);
+            var sampleUV = ConvertToUV(samplePoint);
+            var index = Mathf.FloorToInt((int)(sampleUV.y * height) * width + sampleUV.x * width);
+
+            var pixelData = _pixelDataArray[index];
+            if (pixelData.color.a <= 0)
+            {
+                if (prePixelType == PixelType.None)
+                {
+                    prePixelType = PixelType.Empty;
+                }
+
+                if (prePixelType != PixelType.Empty)
+                {
+                    var preX = minX + step - pixelCount;
+                    var preSamplePoint = new Vector3(preX, point1.y, 0f);
+                    var preSampleUV = ConvertToUV(preSamplePoint);
+                    var centerUVPoint = Vector2.Lerp(preSampleUV, sampleUV, 0.5f);
+                    var longRadius = (sampleUV - preSampleUV).magnitude;
+                    var arc = Mathf.Deg2Rad * transform.eulerAngles.z;
+                    ellipseInfoArray[dataIndex++] = new Vector4(centerUVPoint.x, centerUVPoint.y, longRadius, arc);
+                }
+
+                prePixelType = PixelType.Empty;
+                pixelCount = 0;
+            }
+            else
+            {
+                prePixelType = PixelType.NonEmpty;
+            }
+
+            pixelCount++;
+        }
+
+        var lastSamplePoint = new Vector3(minX + (horizontal - 1) / 100f, point1.y, 0f);
+        var lastSampleUV = ConvertToUV(lastSamplePoint);
+        var lastIndex = Mathf.FloorToInt((int)(lastSampleUV.y * height) * width + lastSampleUV.x * width);
+        var lastPixelData = _pixelDataArray[lastIndex];
+        if (lastPixelData.color.a > 0)
+        {
+            var preX = minX + (horizontal - 1 - pixelCount) / 100f;
+            var preSamplePoint = new Vector3(preX, point1.y, 0f);
+            var preSampleUV = ConvertToUV(preSamplePoint);
+            var centerUVPoint = Vector2.Lerp(preSampleUV, lastSampleUV, 0.5f);
+            var longRadius = (lastSampleUV - preSampleUV).magnitude;
+            var arc = Mathf.Deg2Rad * transform.eulerAngles.z;
+            ellipseInfoArray[dataIndex] = new Vector4(centerUVPoint.x, centerUVPoint.y, longRadius, arc);
+        }
+
+        bottleMat.SetVectorArray("_EllipseInfoArray", ellipseInfoArray);
     }
 
     private Vector2 ConvertToUV(Vector3 point)
     {
         var localPos = transform.InverseTransformPoint(point);
-        return new Vector2(localPos.x / width + 0.5f, localPos.y / height + 0.5f);
+        return new Vector2(localPos.x / (width / 100f) + 0.5f, localPos.y / (height / 100f) + 0.5f);
     }
 
     private float executeWorldY;
@@ -231,5 +355,12 @@ public class BottleTransform : MonoBehaviour
             this.color = color;
             this.worldPos = worldPos;
         }
+    }
+
+    private enum PixelType
+    {
+        None,
+        Empty,
+        NonEmpty,
     }
 }

@@ -30,8 +30,9 @@ Material:
     m_Ints: []
     m_Floats:
     - _Angle: 0
-    - _LineB: 0.5
+    - _LineB: 0.20000002
     - _LineK: 0
     - _LineT: 1
+    - _ShortRadius: 0.5
     m_Colors: []
   m_BuildTextureStacks: []

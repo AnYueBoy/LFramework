@@ -255,7 +255,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _srComp: {fileID: 1124722935}
   bottleMat: {fileID: 2100000, guid: 3ee2b6975a3e4be489c9ba1d0eb4870e, type: 2}
-  fillAmount: 0.2
+  fillAmount: 0.5
   examinePixelCount: 3
 --- !u!212 &1124722935
 SpriteRenderer:

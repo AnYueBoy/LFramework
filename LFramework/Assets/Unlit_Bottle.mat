@@ -29,9 +29,9 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Angle: 2.2604568
-    - _LineB: 0.20486335
-    - _LineK: -0.024316639
+    - _Angle: 0
+    - _LineB: NaN
+    - _LineK: NaN
     - _LineT: 0
     - _ShortRadius: 0.07
     m_Colors: []

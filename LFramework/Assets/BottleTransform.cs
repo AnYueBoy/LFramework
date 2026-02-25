@@ -9,7 +9,7 @@ public class BottleTransform : MonoBehaviour
     [SerializeField] private SpriteRenderer _srComp;
     [SerializeField] private Material bottleMat;
 
-    [SerializeField] [OnValueChanged(nameof(UpdateWorldBoundPos))] [MinValue(0f)] [MaxValue(1f)]
+    [SerializeField] [MinValue(0f)] [MaxValue(1f)]
     private float fillAmount = 0.5f;
 
     private int width, height;
@@ -113,7 +113,7 @@ public class BottleTransform : MonoBehaviour
                 var worldPos = transform.TransformPoint(localPos);
                 _pixelDataArray[index] = new PixelData(pixel, localPos, worldPos);
 
-                if (pixel.a > 144)
+                if (pixel.a > 0)
                 {
                     effectVolume++;
                 }
@@ -151,7 +151,13 @@ public class BottleTransform : MonoBehaviour
 
     private void CalculateFillAmount()
     {
-        var fillVolume = effectVolume * fillAmount;
+        for (int i = 0; i < height; i++)
+        {
+            for (int j = 0; j < width; j++)
+            {
+                var index = i * width + j;
+            }
+        }
     }
 
     public void UpdatePixelPos()
@@ -176,35 +182,12 @@ public class BottleTransform : MonoBehaviour
 
         // var localFillPos = new Vector3(0f, -height / 100f * 0.5f + fillAmount * height / 100f, 0f);
         // var worldFillPos = transform.position.y - 0.1f;
-        var worldY = Mathf.Lerp(minY, maxY, Mathf.Clamp01(fillAmount));
-        var bottomIntersectPoint = CalculateIntersectPoint(lbWorldPoint, rbWorldPoint, worldY);
-        var leftIntersectPoint = CalculateIntersectPoint(lbWorldPoint, ltWorldPoint, worldY);
-        var rightIntersectPoint = CalculateIntersectPoint(rbWorldPoint, rtWorldPoint, worldY);
-        var topIntersectPoint = CalculateIntersectPoint(ltWorldPoint, rtWorldPoint, worldY);
+        // var worldY = Mathf.Lerp(minY, maxY, Mathf.Clamp01(fillAmount));
+        var worldY = CalculateFillVolume();
+        GenerateIntersectPoints(worldY);
 
-        List<Vector3> nonNullPointList = new List<Vector3>();
-        if (bottomIntersectPoint != null)
-        {
-            nonNullPointList.Add(bottomIntersectPoint.Value);
-        }
-
-        if (leftIntersectPoint != null)
-        {
-            nonNullPointList.Add(leftIntersectPoint.Value);
-        }
-
-        if (rightIntersectPoint != null)
-        {
-            nonNullPointList.Add(rightIntersectPoint.Value);
-        }
-
-        if (topIntersectPoint != null)
-        {
-            nonNullPointList.Add(topIntersectPoint.Value);
-        }
-
-        var uv1 = ConvertToUV(nonNullPointList[0]);
-        var uv2 = ConvertToUV(nonNullPointList[1]);
+        var uv1 = ConvertToUV(intersectPointList[0]);
+        var uv2 = ConvertToUV(intersectPointList[1]);
 
         float k, b, arc;
         int t;
@@ -235,7 +218,7 @@ public class BottleTransform : MonoBehaviour
         bottleMat.SetInt("_LineT", t);
         bottleMat.SetFloat("_Angle", transform.eulerAngles.z);
 
-        CalculateEllipse(nonNullPointList[0], nonNullPointList[1], arc);
+        CalculateEllipse(intersectPointList[0], intersectPointList[1], arc);
     }
 
     private Vector4[] ellipseInfoArray;
@@ -255,7 +238,7 @@ public class BottleTransform : MonoBehaviour
             var readHeight = (int)(sampleUV.y * height);
             readHeight = Mathf.Min(height - 1, readHeight);
             var index = Mathf.FloorToInt(readHeight * width + sampleUV.x * width);
-            index = Mathf.Max(0, index);
+            index = Mathf.Clamp(index, 0, _pixelDataArray.Length - 1);
             var pixelData = _pixelDataArray[index];
             if (pixelData.color.a <= 0)
             {
@@ -290,7 +273,7 @@ public class BottleTransform : MonoBehaviour
         var lastRealHeight = (int)(lastSampleUV.y * height);
         lastRealHeight = Mathf.Min(lastRealHeight, height - 1);
         var lastIndex = Mathf.FloorToInt(lastRealHeight * width + lastSampleUV.x * width);
-        lastIndex = Mathf.Max(0, lastIndex);
+        lastIndex = Mathf.Clamp(lastIndex, 0, _pixelDataArray.Length - 1);
         var lastPixelData = _pixelDataArray[lastIndex];
         if (lastPixelData.color.a > 0)
         {
@@ -311,18 +294,93 @@ public class BottleTransform : MonoBehaviour
         return new Vector2(localPos.x / (width / 100f) + 0.5f, localPos.y / (height / 100f) + 0.5f);
     }
 
+    private readonly List<Vector3> intersectPointList = new List<Vector3>();
+
+    private void GenerateIntersectPoints(float worldY)
+    {
+        var bottomIntersectPoint = CalculateIntersectPoint(lbWorldPoint, rbWorldPoint, worldY);
+        var leftIntersectPoint = CalculateIntersectPoint(lbWorldPoint, ltWorldPoint, worldY);
+        var rightIntersectPoint = CalculateIntersectPoint(rbWorldPoint, rtWorldPoint, worldY);
+        var topIntersectPoint = CalculateIntersectPoint(ltWorldPoint, rtWorldPoint, worldY);
+
+        intersectPointList.Clear();
+        if (bottomIntersectPoint != null)
+        {
+            intersectPointList.Add(bottomIntersectPoint.Value);
+        }
+
+        if (leftIntersectPoint != null)
+        {
+            intersectPointList.Add(leftIntersectPoint.Value);
+        }
+
+        if (rightIntersectPoint != null)
+        {
+            intersectPointList.Add(rightIntersectPoint.Value);
+        }
+
+        if (topIntersectPoint != null)
+        {
+            intersectPointList.Add(topIntersectPoint.Value);
+        }
+    }
+
     private float executeWorldY;
 
     private void CalculateY()
     {
     }
 
-    private void CalculateFillVolume()
+    private float CalculateFillVolume()
     {
-        var count = Mathf.CeilToInt(maxY - minY);
+        var realVolume = (int)(Mathf.Clamp01(fillAmount) * effectVolume);
+
+        int cumulativeVolume = 0;
+        var count = Mathf.FloorToInt((maxY - minY) * 100f);
         for (int i = 0; i < count; i++)
         {
+            var yStep = i / 100f;
+            var y = minY + yStep;
+
+            // 根据y值 产生两个相交点
+            GenerateIntersectPoints(y);
+            if (intersectPointList.Count < 2)
+            {
+                continue;
+            }
+
+            var point1 = intersectPointList[0];
+            var point2 = intersectPointList[1];
+            float minX = Mathf.Min(point1.x, point2.x);
+
+            int horizontal = Mathf.FloorToInt(Mathf.Abs(point2.x - point1.x) * 100f);
+            for (int j = 0; j < horizontal - 1; j++)
+            {
+                var xStep = j / 100f;
+                var samplePoint = new Vector3(minX + xStep, y, 0f);
+                var sampleUV = ConvertToUV(samplePoint);
+                var readHeight = (int)(sampleUV.y * height);
+                readHeight = Mathf.Min(height - 1, readHeight);
+                var index = Mathf.FloorToInt(readHeight * width + sampleUV.x * width);
+                index = Mathf.Clamp(index, 0, _pixelDataArray.Length - 1);
+
+                var pixel = _pixelDataArray[index].color;
+                if (pixel.a <= 0)
+                {
+                    continue;
+                }
+
+                cumulativeVolume++;
+                if (cumulativeVolume < realVolume)
+                {
+                    continue;
+                }
+
+                return y;
+            }
         }
+
+        return maxY;
     }
 
     private Vector3? CalculateIntersectPoint(Vector3 firstPoint, Vector3 secondPoint, float y)

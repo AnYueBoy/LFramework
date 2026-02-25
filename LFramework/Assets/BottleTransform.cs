@@ -49,6 +49,8 @@ public class BottleTransform : MonoBehaviour
         height = (int)spriteAsset.rect.height;
         ellipseInfoArray = new Vector4[32];
 
+        worldToLocalMatrix = transform.worldToLocalMatrix;
+
         InitializePixelData(spriteAsset);
     }
 
@@ -145,6 +147,7 @@ public class BottleTransform : MonoBehaviour
         if (!Mathf.Approximately(preAngle, transform.eulerAngles.z))
         {
             preAngle = transform.eulerAngles.z;
+            worldToLocalMatrix = transform.worldToLocalMatrix;
             UpdateWorldBoundPos();
         }
     }
@@ -280,10 +283,21 @@ public class BottleTransform : MonoBehaviour
         bottleMat.SetVectorArray(EllipseInfoArray, ellipseInfoArray);
     }
 
+    private Matrix4x4 worldToLocalMatrix;
+
     private Vector2 ConvertToUV(Vector3 point)
     {
-        var localPos = transform.InverseTransformPoint(point);
-        return new Vector2(localPos.x / (width / 100f) + 0.5f, localPos.y / (height / 100f) + 0.5f);
+        var m00 = worldToLocalMatrix.m00;
+        var m01 = worldToLocalMatrix.m01;
+        var m02 = worldToLocalMatrix.m02;
+        var m03 = worldToLocalMatrix.m03;
+        var m10 = worldToLocalMatrix.m10;
+        var m11 = worldToLocalMatrix.m11;
+        var m12 = worldToLocalMatrix.m12;
+        var m13 = worldToLocalMatrix.m13;
+        float localX = m00 * point.x + m01 * point.y + m02 * point.z + m03;
+        float localY = m10 * point.x + m11 * point.y + m12 * point.z + m13;
+        return new Vector2(localX / (width / 100f) + 0.5f, localY / (height / 100f) + 0.5f);
     }
 
     private readonly List<Vector3> intersectPointList = new List<Vector3>();

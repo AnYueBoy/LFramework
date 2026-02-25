@@ -126,10 +126,8 @@ Shader "Unlit/Bottle"
             fixed4 frag(v2f i) : SV_Target
             {
                 fixed4 col = tex2D(_MainTex, i.uv);
-                if (!LineEquation(i.uv))
-                {
-                    col.a = 0;
-                }
+
+                col.a = lerp(0, col.a, step(0.01, LineEquation(i.uv)));
 
                 float value =
                     EllipseEquation(0, i.uv) *

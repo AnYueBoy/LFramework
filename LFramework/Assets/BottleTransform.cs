@@ -300,7 +300,7 @@ public class BottleTransform : MonoBehaviour
         return new Vector2(localX / (width / 100f) + 0.5f, localY / (height / 100f) + 0.5f);
     }
 
-    private void ConvertToUVOther(float x, float y, float z, out float u, out float v)
+    private void ConvertToUV(float x, float y, float z, out float u, out float v)
     {
         var m00 = worldToLocalMatrix.m00;
         var m01 = worldToLocalMatrix.m01;
@@ -373,8 +373,28 @@ public class BottleTransform : MonoBehaviour
             for (int j = 0; j < horizontal - 1; j++)
             {
                 var xStep = j / 100f;
-                float samplePointX = minX + xStep;
-                ConvertToUVOther(samplePointX, y, 0f, out var su, out var sv);
+                float x = minX + xStep;
+
+                // 此处内联函数以提升性能
+                // ConvertToUV(x, y, 0f, out var su, out var sv);
+
+                #region 内联函数
+
+                var m00 = worldToLocalMatrix.m00;
+                var m01 = worldToLocalMatrix.m01;
+                var m02 = worldToLocalMatrix.m02;
+                var m03 = worldToLocalMatrix.m03;
+                var m10 = worldToLocalMatrix.m10;
+                var m11 = worldToLocalMatrix.m11;
+                var m12 = worldToLocalMatrix.m12;
+                var m13 = worldToLocalMatrix.m13;
+                float localX = m00 * x + m01 * y + m02 * 0f + m03;
+                float localY = m10 * x + m11 * y + m12 * 0f + m13;
+                var su = localX / (width / 100f) + 0.5f;
+                var sv = localY / (height / 100f) + 0.5f;
+
+                #endregion
+
                 var realHeight = (int)(sv * height);
                 var index = (int)(realHeight * width + su * width);
                 var pixelArrayLength = pixelArray.Length;

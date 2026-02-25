@@ -141,7 +141,7 @@ public class BottleTransform : MonoBehaviour
     public void SetFillAmount(float value)
     {
         fillAmount = Mathf.Clamp(value, 0.01f, 0.99f);
-        UpdateWorldBoundPos();
+        CalculateWaterParams();
     }
 
     private void UpdateWorldBoundPos()
@@ -217,9 +217,8 @@ public class BottleTransform : MonoBehaviour
             float step = i / 100f;
             var samplePoint = new Vector3(minX + step, point1.y, 0f);
             var sampleUV = ConvertToUV(samplePoint);
-            var readHeight = (int)(sampleUV.y * height);
-            readHeight = Mathf.Min(height - 1, readHeight);
-            var index = Mathf.FloorToInt(readHeight * width + sampleUV.x * width);
+            var realHeight = (int)(sampleUV.y * height);
+            var index = Mathf.FloorToInt(realHeight * width + sampleUV.x * width);
             index = Mathf.Clamp(index, 0, pixelArray.Length - 1);
             var pixel = pixelArray[index];
             if (pixel.a <= 0)
@@ -253,7 +252,6 @@ public class BottleTransform : MonoBehaviour
         var lastSamplePoint = new Vector3(minX + (horizontal - 1) / 100f, point1.y, 0f);
         var lastSampleUV = ConvertToUV(lastSamplePoint);
         var lastRealHeight = (int)(lastSampleUV.y * height);
-        lastRealHeight = Mathf.Min(lastRealHeight, height - 1);
         var lastIndex = Mathf.FloorToInt(lastRealHeight * width + lastSampleUV.x * width);
         lastIndex = Mathf.Clamp(lastIndex, 0, pixelArray.Length - 1);
         var lastPixel = pixelArray[lastIndex];

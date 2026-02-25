@@ -206,25 +206,28 @@ public class BottleTransform : MonoBehaviour
         var uv1 = ConvertToUV(nonNullPointList[0]);
         var uv2 = ConvertToUV(nonNullPointList[1]);
 
-        float k, b;
+        float k, b, arc;
         int t;
         if (Mathf.Approximately(uv2.x, uv1.x))
         {
             t = -1;
             k = uv2.x;
             b = -1;
+            arc = Mathf.Deg2Rad * 90f;
         }
         else if (Mathf.Approximately(uv2.y, uv1.y))
         {
             t = 1;
             k = 0;
             b = uv2.y;
+            arc = Mathf.Atan(k);
         }
         else
         {
             t = 0;
             k = (uv2.y - uv1.y) / (uv2.x - uv1.x);
             b = uv2.y - k * uv2.x;
+            arc = Mathf.Atan(k);
         }
 
         bottleMat.SetFloat("_LineK", k);
@@ -232,7 +235,6 @@ public class BottleTransform : MonoBehaviour
         bottleMat.SetInt("_LineT", t);
         bottleMat.SetFloat("_Angle", transform.eulerAngles.z);
 
-        var arc = Mathf.Atan(k);
         CalculateEllipse(nonNullPointList[0], nonNullPointList[1], arc);
     }
 

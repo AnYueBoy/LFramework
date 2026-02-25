@@ -24,6 +24,17 @@ public class BottleTransform : MonoBehaviour
     private float minY, maxY;
     private bool initialized;
 
+    #region Shader 属性
+
+    private static readonly int LineK = Shader.PropertyToID("_LineK");
+    private static readonly int LineB = Shader.PropertyToID("_LineB");
+    private static readonly int LineT = Shader.PropertyToID("_LineT");
+    private static readonly int Angle = Shader.PropertyToID("_Angle");
+    private static readonly int EllipseCount = Shader.PropertyToID("_EllipseCount");
+    private static readonly int EllipseInfoArray = Shader.PropertyToID("_EllipseInfoArray");
+
+    #endregion
+
     private void Awake()
     {
         initialized = false;
@@ -191,10 +202,10 @@ public class BottleTransform : MonoBehaviour
             arc = Mathf.Atan(k);
         }
 
-        bottleMat.SetFloat("_LineK", k);
-        bottleMat.SetFloat("_LineB", b);
-        bottleMat.SetInt("_LineT", t);
-        bottleMat.SetFloat("_Angle", transform.eulerAngles.z);
+        bottleMat.SetFloat(LineK, k);
+        bottleMat.SetFloat(LineB, b);
+        bottleMat.SetInt(LineT, t);
+        bottleMat.SetFloat(Angle, transform.eulerAngles.z);
 
         // 计算水面椭圆参数
         if (intersectPointList.Count >= 2)
@@ -265,8 +276,8 @@ public class BottleTransform : MonoBehaviour
             ellipseInfoArray[dataIndex++] = new Vector4(centerUVPoint.x, centerUVPoint.y, longRadius, arc);
         }
 
-        bottleMat.SetInt("_EllipseCount", dataIndex);
-        bottleMat.SetVectorArray("_EllipseInfoArray", ellipseInfoArray);
+        bottleMat.SetInt(EllipseCount, dataIndex);
+        bottleMat.SetVectorArray(EllipseInfoArray, ellipseInfoArray);
     }
 
     private Vector2 ConvertToUV(Vector3 point)

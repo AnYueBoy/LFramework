@@ -8,8 +8,10 @@ public class BottleTransform : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer _srComp;
     [SerializeField] private Material bottleMat;
-
-    [SerializeField] [MinValue(0f)] [MaxValue(1f)]
+#if UNITY_EDITOR
+    [OnValueChanged(nameof(SetFillAmount))] [SerializeField]
+    private float editorFillAmount = 0.5f;
+#endif
     private float fillAmount = 0.5f;
 
     private int width, height;
@@ -160,6 +162,12 @@ public class BottleTransform : MonoBehaviour
         }
     }
 
+    public void SetFillAmount(float value)
+    {
+        fillAmount = Mathf.Clamp(value, 0.01f, 0.99f);
+        UpdateWorldBoundPos();
+    }
+
     public void UpdatePixelPos()
     {
         for (int i = 0; i < _pixelDataArray.Length; i++)
@@ -185,7 +193,6 @@ public class BottleTransform : MonoBehaviour
         // var worldY = Mathf.Lerp(minY, maxY, Mathf.Clamp01(fillAmount));
         var worldY = CalculateFillVolume();
         GenerateIntersectPoints(worldY);
-
         var uv1 = ConvertToUV(intersectPointList[0]);
         var uv2 = ConvertToUV(intersectPointList[1]);
 
@@ -218,7 +225,10 @@ public class BottleTransform : MonoBehaviour
         bottleMat.SetInt("_LineT", t);
         bottleMat.SetFloat("_Angle", transform.eulerAngles.z);
 
-        CalculateEllipse(intersectPointList[0], intersectPointList[1], arc);
+        if (intersectPointList.Count >= 2)
+        {
+            CalculateEllipse(intersectPointList[0], intersectPointList[1], arc);
+        }
     }
 
     private Vector4[] ellipseInfoArray;

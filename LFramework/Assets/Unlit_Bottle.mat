@@ -29,7 +29,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Angle: 0
+    - _Angle: 37.99999
     - _LineB: NaN
     - _LineK: NaN
     - _LineT: 0

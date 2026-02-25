@@ -56,23 +56,28 @@ Shader "Unlit/Bottle"
             float _ShortRadius;
             int _EllipseCount;
 
-            bool CheckLine(float2 uv)
+            inline float LineEquation(float2 uv)
             {
-                if (_LineT == 1)
-                {
-                    return uv.y <= _LineB;
-                }
+                float isLineT1 = 1.0 - step(0.01, abs(_LineT - 1.0)); // _LineT == 1 时为1
+                float isLineT_1 = 1.0 - step(0.01, abs(_LineT + 1.0)); // _LineT == -1 时为1
 
-                if (_LineT == -1)
-                {
-                    return uv.x >= _LineK;
-                }
+                float angle1 = step(0, _Angle) * step(_Angle, 90); // [0,90]
+                float angle2 = step(270, _Angle) * step(_Angle, 360); // [270,360]
+                float usePositive = saturate(angle1 + angle2);
 
-                if ((_Angle >= 0 && _Angle <= 90) || (_Angle >= 270 && _Angle <= 360))
-                {
-                    return _LineK * uv.x + _LineB - uv.y >= 0;
-                }
-                return _LineK * uv.x + _LineB - uv.y < 0;
+                // 计算所有可能的结果值
+                float result1 = step(uv.y, _LineB); // uv.y <= _LineB
+                float result2 = step(_LineK, uv.x); // uv.x >= _LineK
+                float lineValue = _LineK * uv.x + _LineB - uv.y;
+                float result3 = step(0.0, lineValue); // >= 0
+                float result4 = 1.0 - step(0.0, lineValue); // < 0
+
+                float normalCase = (1.0 - isLineT1) * (1.0 - isLineT_1);
+
+                return isLineT1 * result1 +
+                    isLineT_1 * result2 +
+                    normalCase * usePositive * result3 +
+                    normalCase * (1.0 - usePositive) * result4;
             }
 
             inline float EllipseEquation(int index, float2 uv)
@@ -121,7 +126,7 @@ Shader "Unlit/Bottle"
             fixed4 frag(v2f i) : SV_Target
             {
                 fixed4 col = tex2D(_MainTex, i.uv);
-                if (!CheckLine(i.uv))
+                if (!LineEquation(i.uv))
                 {
                     col.a = 0;
                 }

@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+
+#if UNITY_EDITOR
 using Sirenix.OdinInspector;
+#endif
 using UnityEngine;
 
 public class BottleTransform : MonoBehaviour
@@ -8,21 +11,17 @@ public class BottleTransform : MonoBehaviour
     [SerializeField] private SpriteRenderer _srComp;
     [SerializeField] private Material bottleMat;
 #if UNITY_EDITOR
-    [OnValueChanged(nameof(SetFillAmount))] [SerializeField]
+    [SerializeField] [OnValueChanged(nameof(SetFillAmount))]
     private float editorFillAmount = 0.5f;
 #endif
+
     private float fillAmount = 0.5f;
-
     private int width, height;
-    private PixelData[] _pixelDataArray;
-
+    private Color32[] pixelArray;
     private int effectVolume;
-
     private Vector3 lbLocalPoint, rbLocalPoint, ltLocalPoint, rtLocalPoint;
     private Vector3 lbWorldPoint, rbWorldPoint, ltWorldPoint, rtWorldPoint;
-
     private float minY, maxY;
-
     private bool initialized;
 
     private void Awake()
@@ -38,7 +37,6 @@ public class BottleTransform : MonoBehaviour
         var spriteAsset = _srComp.sprite;
         width = (int)spriteAsset.rect.width;
         height = (int)spriteAsset.rect.height;
-        _pixelDataArray = new PixelData[width * height];
         ellipseInfoArray = new Vector4[32];
 
         InitializePixelData(spriteAsset);
@@ -46,9 +44,9 @@ public class BottleTransform : MonoBehaviour
 
     [SerializeField] private int examinePixelCount = 2;
 
-    private Color32[] CompatiblePixel(Sprite spriteAsset)
+    private void CompatiblePixel(Sprite spriteAsset)
     {
-        var pixelArray = spriteAsset.texture.GetPixels32();
+        pixelArray = spriteAsset.texture.GetPixels32();
         for (int i = 0; i < height; i++)
         {
             for (int j = 0; j < width; j++)
@@ -91,15 +89,12 @@ public class BottleTransform : MonoBehaviour
                 }
             }
         }
-
-        return pixelArray;
     }
 
     private void InitializePixelData(Sprite spriteAsset)
     {
         // 兼容处理像素信息
-        var pixelArray = CompatiblePixel(spriteAsset);
-        var spriteSize = spriteAsset.bounds.size;
+        CompatiblePixel(spriteAsset);
 
         for (int i = 0; i < height; i++)
         {
@@ -108,18 +103,14 @@ public class BottleTransform : MonoBehaviour
                 var index = i * width + j;
 
                 var pixel = pixelArray[index];
-                float localX = (j / (float)width - 0.5f) * spriteSize.x;
-                float localY = (i / (float)height - 0.5f) * spriteSize.y;
-                var localPos = new Vector3(localX, localY, 0f);
-                var worldPos = transform.TransformPoint(localPos);
-                _pixelDataArray[index] = new PixelData(pixel, localPos, worldPos);
-
                 if (pixel.a > 0)
                 {
                     effectVolume++;
                 }
             }
         }
+
+        var spriteSize = spriteAsset.bounds.size;
 
         // 初始化边界点信息
         lbLocalPoint = new Vector3(-spriteSize.x / 2f, -spriteSize.y / 2f, 0f);
@@ -152,8 +143,7 @@ public class BottleTransform : MonoBehaviour
         UpdateWorldBoundPos();
     }
 
-    [Button("角度更新")]
-    public void UpdateWorldBoundPos()
+    private void UpdateWorldBoundPos()
     {
         lbWorldPoint = transform.TransformPoint(lbLocalPoint);
         rbWorldPoint = transform.TransformPoint(rbLocalPoint);
@@ -220,9 +210,9 @@ public class BottleTransform : MonoBehaviour
             var readHeight = (int)(sampleUV.y * height);
             readHeight = Mathf.Min(height - 1, readHeight);
             var index = Mathf.FloorToInt(readHeight * width + sampleUV.x * width);
-            index = Mathf.Clamp(index, 0, _pixelDataArray.Length - 1);
-            var pixelData = _pixelDataArray[index];
-            if (pixelData.color.a <= 0)
+            index = Mathf.Clamp(index, 0, pixelArray.Length - 1);
+            var pixel = pixelArray[index];
+            if (pixel.a <= 0)
             {
                 if (prePixelType == PixelType.None)
                 {
@@ -255,9 +245,9 @@ public class BottleTransform : MonoBehaviour
         var lastRealHeight = (int)(lastSampleUV.y * height);
         lastRealHeight = Mathf.Min(lastRealHeight, height - 1);
         var lastIndex = Mathf.FloorToInt(lastRealHeight * width + lastSampleUV.x * width);
-        lastIndex = Mathf.Clamp(lastIndex, 0, _pixelDataArray.Length - 1);
-        var lastPixelData = _pixelDataArray[lastIndex];
-        if (lastPixelData.color.a > 0)
+        lastIndex = Mathf.Clamp(lastIndex, 0, pixelArray.Length - 1);
+        var lastPixel = pixelArray[lastIndex];
+        if (lastPixel.a > 0)
         {
             var preX = minX + (horizontal - 1 - pixelCount) / 100f;
             var preSamplePoint = new Vector3(preX, point1.y, 0f);
@@ -339,9 +329,9 @@ public class BottleTransform : MonoBehaviour
                 var readHeight = (int)(sampleUV.y * height);
                 readHeight = Mathf.Min(height - 1, readHeight);
                 var index = Mathf.FloorToInt(readHeight * width + sampleUV.x * width);
-                index = Mathf.Clamp(index, 0, _pixelDataArray.Length - 1);
+                index = Mathf.Clamp(index, 0, pixelArray.Length - 1);
 
-                var pixel = _pixelDataArray[index].color;
+                var pixel = pixelArray[index];
                 if (pixel.a <= 0)
                 {
                     continue;
@@ -383,19 +373,6 @@ public class BottleTransform : MonoBehaviour
         }
 
         return new Vector3(x, y, 0);
-    }
-
-    private class PixelData
-    {
-        public Color32 color;
-        public Vector3 worldPos;
-        public Vector3 localPos;
-
-        public PixelData(Color32 color, Vector3 localPos, Vector3 worldPos)
-        {
-            this.color = color;
-            this.worldPos = worldPos;
-        }
     }
 
     private enum PixelType

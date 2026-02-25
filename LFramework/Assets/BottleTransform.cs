@@ -300,6 +300,22 @@ public class BottleTransform : MonoBehaviour
         return new Vector2(localX / (width / 100f) + 0.5f, localY / (height / 100f) + 0.5f);
     }
 
+    private void ConvertToUVOther(float x, float y, float z, out float u, out float v)
+    {
+        var m00 = worldToLocalMatrix.m00;
+        var m01 = worldToLocalMatrix.m01;
+        var m02 = worldToLocalMatrix.m02;
+        var m03 = worldToLocalMatrix.m03;
+        var m10 = worldToLocalMatrix.m10;
+        var m11 = worldToLocalMatrix.m11;
+        var m12 = worldToLocalMatrix.m12;
+        var m13 = worldToLocalMatrix.m13;
+        float localX = m00 * x + m01 * y + m02 * z + m03;
+        float localY = m10 * x + m11 * y + m12 * z + m13;
+        u = localX / (width / 100f) + 0.5f;
+        v = localY / (height / 100f) + 0.5f;
+    }
+
     private readonly List<Vector3> intersectPointList = new List<Vector3>();
 
     private void GenerateIntersectPoints(float worldY)
@@ -357,11 +373,19 @@ public class BottleTransform : MonoBehaviour
             for (int j = 0; j < horizontal - 1; j++)
             {
                 var xStep = j / 100f;
-                var samplePoint = new Vector3(minX + xStep, y, 0f);
-                var sampleUV = ConvertToUV(samplePoint);
-                var realHeight = (int)(sampleUV.y * height);
-                var index = Mathf.FloorToInt(realHeight * width + sampleUV.x * width);
-                index = Mathf.Clamp(index, 0, pixelArray.Length - 1);
+                float samplePointX = minX + xStep;
+                ConvertToUVOther(samplePointX, y, 0f, out var su, out var sv);
+                var realHeight = (int)(sv * height);
+                var index = (int)(realHeight * width + su * width);
+                var pixelArrayLength = pixelArray.Length;
+                if (index < 0)
+                {
+                    index = 0;
+                }
+                else if (index >= pixelArrayLength - 1)
+                {
+                    index = pixelArrayLength - 1;
+                }
 
                 var pixel = pixelArray[index];
                 if (pixel.a <= 0)

@@ -49,9 +49,20 @@ public class BottleTransform : MonoBehaviour
         height = (int)spriteAsset.rect.height;
         ellipseInfoArray = new Vector4[32];
 
-        worldToLocalMatrix = transform.worldToLocalMatrix;
+        UpdateTransformMatrix();
 
         InitializePixelData(spriteAsset);
+    }
+
+    private void UpdateTransformMatrix()
+    {
+        Vector3 position = transform.position;
+        Quaternion rotation = transform.rotation;
+
+        // 构建只包含旋转和平移的矩阵
+        Matrix4x4 trs = Matrix4x4.TRS(position, rotation, Vector3.one);
+        localToWorldMatrix = trs;
+        worldToLocalMatrix = trs.inverse;
     }
 
     [SerializeField] private int examinePixelCount = 2;
@@ -147,7 +158,6 @@ public class BottleTransform : MonoBehaviour
         if (!Mathf.Approximately(preAngle, transform.eulerAngles.z))
         {
             preAngle = transform.eulerAngles.z;
-            worldToLocalMatrix = transform.worldToLocalMatrix;
             UpdateWorldBoundPos();
         }
     }
@@ -160,10 +170,12 @@ public class BottleTransform : MonoBehaviour
 
     private void UpdateWorldBoundPos()
     {
-        lbWorldPoint = transform.TransformPoint(lbLocalPoint);
-        rbWorldPoint = transform.TransformPoint(rbLocalPoint);
-        ltWorldPoint = transform.TransformPoint(ltLocalPoint);
-        rtWorldPoint = transform.TransformPoint(rtLocalPoint);
+        UpdateTransformMatrix();
+
+        lbWorldPoint = localToWorldMatrix.MultiplyPoint3x4(lbLocalPoint);
+        rbWorldPoint = localToWorldMatrix.MultiplyPoint3x4(rbLocalPoint);
+        ltWorldPoint = localToWorldMatrix.MultiplyPoint3x4(ltLocalPoint);
+        rtWorldPoint = localToWorldMatrix.MultiplyPoint3x4(rtLocalPoint);
 
         minY = Mathf.Min(lbWorldPoint.y, rbWorldPoint.y, ltWorldPoint.y, rtWorldPoint.y);
         maxY = Mathf.Max(lbWorldPoint.y, rbWorldPoint.y, ltWorldPoint.y, rtWorldPoint.y);
@@ -284,6 +296,7 @@ public class BottleTransform : MonoBehaviour
     }
 
     private Matrix4x4 worldToLocalMatrix;
+    private Matrix4x4 localToWorldMatrix;
 
     private Vector2 ConvertToUV(Vector3 point)
     {
@@ -427,13 +440,14 @@ public class BottleTransform : MonoBehaviour
     }
 
     private const float referenceValue = 0.0001f;
+
     private Vector3? CalculateIntersectPoint(Vector3 firstPoint, Vector3 secondPoint, float y)
     {
         if (Abs(secondPoint.x - firstPoint.x) < referenceValue)
         {
             return new Vector3(firstPoint.x, y, 0f);
         }
-        
+
         if (Abs(secondPoint.y - firstPoint.y) < referenceValue)
         {
             return null;

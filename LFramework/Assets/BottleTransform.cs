@@ -10,6 +10,7 @@ public class BottleTransform : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer _srComp;
     [SerializeField] private Material bottleMat;
+    [SerializeField] private int alphaThreshold = 200;
 #if UNITY_EDITOR
     [SerializeField] [OnValueChanged(nameof(SetFillAmount))]
     private float editorFillAmount = 0.5f;
@@ -91,7 +92,7 @@ public class BottleTransform : MonoBehaviour
                 for (int k = leftIndex; k <= rightIndex; k++)
                 {
                     var examinePixel = pixelArray[k];
-                    if (examinePixel.a <= 0)
+                    if (examinePixel.a <= alphaThreshold)
                     {
                         emptyPixelCount++;
                     }
@@ -183,6 +184,7 @@ public class BottleTransform : MonoBehaviour
         CalculateWaterParams();
     }
 
+    [Button("计算")]
     private void CalculateWaterParams()
     {
         // 计算水参数
@@ -231,8 +233,11 @@ public class BottleTransform : MonoBehaviour
 
     private Vector4[] ellipseInfoArray;
 
+    private List<Vector3> pointList = new List<Vector3>();
+
     private void CalculateEllipse(Vector3 point1, Vector3 point2, float arc)
     {
+        pointList.Clear();
         int horizontal = Mathf.FloorToInt(Mathf.Abs(point2.x - point1.x) * 100f);
         float minX = Mathf.Min(point1.x, point2.x);
         int pixelCount = 0;
@@ -262,6 +267,8 @@ public class BottleTransform : MonoBehaviour
                     var centerUVPoint = Vector2.Lerp(preSampleUV, sampleUV, 0.5f);
                     var longRadius = (sampleUV - preSampleUV).magnitude;
                     ellipseInfoArray[dataIndex++] = new Vector4(centerUVPoint.x, centerUVPoint.y, longRadius, arc);
+                    pointList.Add(preSamplePoint);
+                    pointList.Add(samplePoint);
                 }
 
                 prePixelType = PixelType.Empty;
@@ -270,9 +277,8 @@ public class BottleTransform : MonoBehaviour
             else
             {
                 prePixelType = PixelType.NonEmpty;
+                pixelCount++;
             }
-
-            pixelCount++;
         }
 
         var lastSamplePoint = new Vector3(minX + (horizontal - 1) / 100f, point1.y, 0f);
@@ -289,6 +295,8 @@ public class BottleTransform : MonoBehaviour
             var centerUVPoint = Vector2.Lerp(preSampleUV, lastSampleUV, 0.5f);
             var longRadius = (lastSampleUV - preSampleUV).magnitude;
             ellipseInfoArray[dataIndex++] = new Vector4(centerUVPoint.x, centerUVPoint.y, longRadius, arc);
+            pointList.Add(preSamplePoint);
+            pointList.Add(lastSamplePoint);
         }
 
         bottleMat.SetInt(EllipseCount, dataIndex);
@@ -310,7 +318,7 @@ public class BottleTransform : MonoBehaviour
         var m13 = worldToLocalMatrix.m13;
         float localX = m00 * point.x + m01 * point.y + m02 * point.z + m03;
         float localY = m10 * point.x + m11 * point.y + m12 * point.z + m13;
-        return new Vector2(localX / (width / 100f) + 0.5f, localY / (height / 100f) + 0.5f);
+        return new Vector2(localX * 100f / width + 0.5f, localY * 100f / height + 0.5f);
     }
 
     private void ConvertToUV(float x, float y, float z, out float u, out float v)
@@ -464,6 +472,20 @@ public class BottleTransform : MonoBehaviour
         }
 
         return new Vector3(x, y, 0);
+    }
+
+    private void OnDrawGizmos()
+    {
+        var originColor = Gizmos.color;
+        for (int i = 0; i < pointList.Count - 1; i += 2)
+        {
+            var pont1 = pointList[i];
+            var point2 = pointList[i + 1];
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(pont1, point2);
+        }
+
+        Gizmos.color = originColor;
     }
 
     private float Abs(float value)

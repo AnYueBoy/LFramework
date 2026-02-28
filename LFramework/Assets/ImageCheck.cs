@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
@@ -13,7 +14,11 @@ public class ImageCheck : MonoBehaviour
     private Texture2D _texture2D;
     [ShowInInspector] [ReadOnly] private int width, height;
 
-    [Button("初始化")]
+    private void Awake()
+    {
+        Initialize();
+    }
+
     private void Initialize()
     {
         var sprite = _spComp.sprite;
@@ -21,16 +26,11 @@ public class ImageCheck : MonoBehaviour
         height = sprite.texture.height;
         executeColorArray = new Color32[width * height];
         originColorArray = sprite.texture.GetPixels32();
-        _texture2D = new Texture2D(width, height, TextureFormat.ARGB32, false)
-        {
-            filterMode = FilterMode.Point
-        };
-        spriteMat.mainTexture = _texture2D;
     }
 
     [SerializeField] private int checkWidth;
     [SerializeField] private int checkHeight;
-
+    [SerializeField] private bool fullWidth;
     private GameObject pointNode;
 
     [Button("处理")]
@@ -42,11 +42,30 @@ public class ImageCheck : MonoBehaviour
             executeColorArray[i] = originColor;
         }
 
-        var index = checkHeight * width + checkWidth;
-        executeColorArray[index] = new Color32(255, 0, 0, 255);
+        if (fullWidth)
+        {
+            for (int i = 0; i < width; i++)
+            {
+                var index = checkHeight * width + i;
+                var originPixel = originColorArray[index];
+                executeColorArray[index] = new Color32(0, 0, 0, originPixel.a);
+            }
+        }
+        else
+        {
+            var index = checkHeight * width + checkWidth;
+            executeColorArray[index] = new Color32(0, 0, 0, 255);
+        }
 
+        _texture2D = new Texture2D(width, height, TextureFormat.ARGB32, false)
+        {
+            filterMode = FilterMode.Point
+        };
         _texture2D.SetPixels32(executeColorArray);
         _texture2D.Apply();
+        spriteMat.mainTexture = _texture2D;
+        _spComp.sprite = Sprite.Create(_texture2D, new Rect(0f, 0f, width, height), Vector2.one * 0.5f);
+
         if (pointNode == null)
         {
             pointNode = new GameObject("Point");

@@ -31,10 +31,10 @@ Material:
     m_Floats:
     - _Angle: 0
     - _EllipseCount: 3
-    - _LineB: 0.40036902
+    - _LineB: 0.5620805
     - _LineK: 0
     - _LineT: 1
-    - _ShortRadius: 0.07
+    - _ShortRadius: 0.01
     m_Colors:
     - _EllipseColor: {r: 1, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []

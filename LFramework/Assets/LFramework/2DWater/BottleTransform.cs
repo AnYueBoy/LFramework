@@ -14,6 +14,8 @@ public class BottleTransform : MonoBehaviour
 #if UNITY_EDITOR
     [SerializeField] [OnValueChanged(nameof(SetFillAmount))]
     private float editorFillAmount = 0.5f;
+
+    [SerializeField] private bool enableAuxiliaryLine;
 #endif
 
     private float fillAmount = 0.5f;
@@ -473,9 +475,15 @@ public class BottleTransform : MonoBehaviour
 
         return new Vector3(x, y, 0);
     }
+#if UNITY_EDITOR
 
     private void OnDrawGizmos()
     {
+        if (!enableAuxiliaryLine)
+        {
+            return;
+        }
+
         var originColor = Gizmos.color;
         for (int i = 0; i < pointList.Count - 1; i += 2)
         {
@@ -487,6 +495,7 @@ public class BottleTransform : MonoBehaviour
 
         Gizmos.color = originColor;
     }
+#endif
 
     private float Abs(float value)
     {

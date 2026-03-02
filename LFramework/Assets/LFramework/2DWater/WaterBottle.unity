@@ -297,7 +297,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
-  m_Sprite: {fileID: 21300000, guid: 128addcd5a80a034da67ea60d545e47d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d43dfc93b06b0ad429f985e37811a44d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -342,6 +342,7 @@ MonoBehaviour:
   bottleMat: {fileID: 2100000, guid: 3ee2b6975a3e4be489c9ba1d0eb4870e, type: 2}
   alphaThreshold: 128
   editorFillAmount: 0.7
+  enableAuxiliaryLine: 0
   examinePixelCount: 10
 --- !u!212 &1124722935
 SpriteRenderer:
@@ -384,7 +385,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 8c2a2e784bb6da5418e8867c20f1bcb6, type: 3}
+  m_Sprite: {fileID: 21300000, guid: cdd0851fee7bc874f8dac409a706937a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -832,6 +833,7 @@ MonoBehaviour:
   bottleMat: {fileID: 2100000, guid: 8c64e6571dfc5db4a80f30b99e713b98, type: 2}
   alphaThreshold: 200
   editorFillAmount: 0.5
+  enableAuxiliaryLine: 0
   examinePixelCount: 3
 --- !u!212 &2117004320
 SpriteRenderer:

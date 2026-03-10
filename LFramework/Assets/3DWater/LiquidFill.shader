@@ -2,11 +2,13 @@ Shader "Custom/LiquidFill"
 {
     Properties
     {
-        _FillAmount ("Fill Amount", Range(-1, 1)) = 0
+        _FillAmount ("Fill Amount", Range(0, 1)) = 0
         _Color ("Liquid Color", Color) = (0.2, 0.6, 1, 1)
         _TopColor ("Top Color", Color) = (0.8, 0.9, 1, 1)
         _FoamColor ("Foam Color", Color) = (1, 1, 1, 1)
         _FoamWidth ("Foam Width", Range(0, 0.1)) = 0.02
+        _MinY ("Min Y (World)", Float) = 0
+        _MaxY ("Max Y (World)", Float) = 1
     }
 
     SubShader
@@ -39,6 +41,8 @@ Shader "Custom/LiquidFill"
             float4 _TopColor;
             float4 _FoamColor;
             float _FoamWidth;
+            float _MinY;
+            float _MaxY;
 
             v2f vert (appdata v)
             {
@@ -50,11 +54,15 @@ Shader "Custom/LiquidFill"
 
             fixed4 frag (v2f i, fixed facing : VFACE) : SV_Target
             {
-                float atFillLine = step(i.worldPos.y, _FillAmount);
+                clip(_FillAmount - 1e-5);
+
+                float fillWorldY = lerp(_MinY, _MaxY, _FillAmount);
+
+                float atFillLine = step(i.worldPos.y, fillWorldY);
                 clip(atFillLine - 0.5);
 
-                float foamLine = step(i.worldPos.y, _FillAmount)
-                               - step(i.worldPos.y, _FillAmount - _FoamWidth);
+                float foamLine = step(i.worldPos.y, fillWorldY)
+                               - step(i.worldPos.y, fillWorldY - _FoamWidth);
 
                 fixed4 liquidCol = lerp(_Color, _FoamColor, foamLine);
                 fixed4 topCol = lerp(_TopColor, _FoamColor, foamLine * 0.5);

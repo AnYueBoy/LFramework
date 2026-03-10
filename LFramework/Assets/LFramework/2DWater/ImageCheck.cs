@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Sirenix.OdinInspector;
 using UnityEngine;
 
 public class ImageCheck : MonoBehaviour
@@ -12,7 +11,7 @@ public class ImageCheck : MonoBehaviour
     private Color32[] executeColorArray;
     [SerializeField] private Material spriteMat;
     private Texture2D _texture2D;
-    [ShowInInspector] [ReadOnly] private int width, height;
+    private int width, height;
 
     private void Awake()
     {
@@ -33,7 +32,7 @@ public class ImageCheck : MonoBehaviour
     [SerializeField] private bool fullWidth;
     private GameObject pointNode;
 
-    [Button("处理")]
+    // [Button("处理")]
     private void Test()
     {
         for (int i = 0; i < originColorArray.Length; i++)

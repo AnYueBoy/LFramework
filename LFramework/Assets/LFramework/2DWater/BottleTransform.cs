@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-#if UNITY_EDITOR
-using Sirenix.OdinInspector;
-#endif
+
 using UnityEngine;
 
 public class BottleTransform : MonoBehaviour
@@ -12,7 +10,7 @@ public class BottleTransform : MonoBehaviour
     [SerializeField] private Material bottleMat;
     [SerializeField] private int alphaThreshold = 200;
 #if UNITY_EDITOR
-    [SerializeField] [OnValueChanged(nameof(SetFillAmount))]
+    // [SerializeField] [OnValueChanged(nameof(SetFillAmount))]
     private float editorFillAmount = 0.5f;
 
     [SerializeField] private bool enableAuxiliaryLine;
@@ -186,7 +184,7 @@ public class BottleTransform : MonoBehaviour
         CalculateWaterParams();
     }
 
-    [Button("计算")]
+    // [Button("计算")]
     private void CalculateWaterParams()
     {
         // 计算水参数

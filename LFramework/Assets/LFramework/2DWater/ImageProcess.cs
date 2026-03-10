@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Sirenix.OdinInspector;
+// using Sirenix.OdinInspector;
 using UnityEngine;
 
 public class ImageProcess : MonoBehaviour
@@ -16,7 +16,7 @@ public class ImageProcess : MonoBehaviour
 
     [SerializeField] private Material _material;
 
-    [Button("修改图片")]
+    // [Button("修改图片")]
     private void ApplyTexture()
     {
         pixelArray = spriteAsset.texture.GetPixels32();

@@ -9,6 +9,10 @@ Shader "Custom/LiquidFill"
         _FoamWidth ("Foam Width", Range(0, 0.1)) = 0.02
         _MinY ("Min Y (World)", Float) = 0
         _MaxY ("Max Y (World)", Float) = 1
+        _TiltX ("Tilt X", Float) = 0
+        _TiltZ ("Tilt Z", Float) = 0
+        _CenterX ("Center X", Float) = 0
+        _CenterZ ("Center Z", Float) = 0
     }
 
     SubShader
@@ -43,6 +47,10 @@ Shader "Custom/LiquidFill"
             float _FoamWidth;
             float _MinY;
             float _MaxY;
+            float _TiltX;
+            float _TiltZ;
+            float _CenterX;
+            float _CenterZ;
 
             v2f vert (appdata v)
             {
@@ -56,7 +64,11 @@ Shader "Custom/LiquidFill"
             {
                 clip(_FillAmount - 1e-5);
 
-                float fillWorldY = lerp(_MinY, _MaxY, _FillAmount);
+                // 基础填充高度 + 水面倾斜偏移（以容器中心为原点的倾斜平面）
+                float baseFillY = lerp(_MinY, _MaxY, _FillAmount);
+                float tiltOffset = (i.worldPos.x - _CenterX) * _TiltX
+                                 + (i.worldPos.z - _CenterZ) * _TiltZ;
+                float fillWorldY = baseFillY + tiltOffset;
 
                 float atFillLine = step(i.worldPos.y, fillWorldY);
                 clip(atFillLine - 0.5);

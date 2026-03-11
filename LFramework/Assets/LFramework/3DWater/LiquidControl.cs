@@ -1,6 +1,5 @@
 using UnityEngine;
 
-[ExecuteAlways]
 [RequireComponent(typeof(Renderer))]
 public class LiquidControl : MonoBehaviour
 {
@@ -38,18 +37,6 @@ public class LiquidControl : MonoBehaviour
 
     void Update()
     {
-#if UNITY_EDITOR
-        // 编辑器非Play模式下不模拟物理，直接归零倾斜
-        if (!Application.isPlaying)
-        {
-            _tilt = Vector2.zero;
-            _tiltVelocity = Vector2.zero;
-            _prevPosition = transform.position;
-            _prevVelocity = Vector3.zero;
-            UpdateMaterial();
-            return;
-        }
-#endif
         float dt = Time.deltaTime;
         if (dt <= 0f)
         {

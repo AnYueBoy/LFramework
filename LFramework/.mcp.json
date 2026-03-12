@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "ai-game-developer": {
+      "type": "http",
+      "url": "http://localhost:8085"
+    },
+    "ebook-mcp": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "D:/Fork/ebook-mcp/src/ebook_mcp",
+        "run",
+        "main.py"
+      ]
+    }
+  }
+}

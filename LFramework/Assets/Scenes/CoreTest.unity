@@ -238,9 +238,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startPoint: {fileID: 291836130}
   endPoint: {fileID: 1977975337}
-  tangentLength: 0.5
+  arcHeight: 0.3
   streamRadius: 0.06
-  endRadiusRatio: 0.3
   curveSegments: 20
   ringVertices: 8
   streamColor: {r: 0.2, g: 0.6, b: 1, a: 1}
@@ -416,20 +415,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillAmount: 0.526
-  segments:
-  - color: {r: 0.2, g: 0.6, b: 1, a: 1}
-    ratio: 0.2
-  - color: {r: 0.4071842, g: 1, b: 0.19999999, a: 1}
-    ratio: 0.2
-  - color: {r: 1, g: 0.38621825, b: 0.19999999, a: 1}
-    ratio: 0.2
-  - color: {r: 0.8207547, g: 0, b: 0.5252172, a: 1}
-    ratio: 0.2
-  - color: {r: 0.2388069, g: 0.19999999, b: 1, a: 1}
-    ratio: 0.2
-  topColor: {r: 0.8, g: 0.9, b: 1, a: 1}
-  foamColor: {r: 1, g: 1, b: 1, a: 1}
-  foamWidth: 0.02
   stiffness: 8
   damping: 1.5
   inertiaScale: 0.08
@@ -742,6 +727,8 @@ Material:
     - _FillAmount: 0.455
     - _FillLevel: 0.5
     - _FoamWidth: 0.0068
+    - _LocalMaxY: 0.5
+    - _LocalMinY: -0.5
     - _MaxY: 1
     - _MinY: -1
     - _SegBound0: 1
@@ -973,12 +960,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillAmount: 0.455
-  segments:
-  - color: {r: 0.2, g: 0.6, b: 1, a: 1}
-    ratio: 1
-  topColor: {r: 0.8, g: 0.9, b: 1, a: 1}
-  foamColor: {r: 1, g: 1, b: 1, a: 1}
-  foamWidth: 0.02
   stiffness: 8
   damping: 1.5
   inertiaScale: 0.08

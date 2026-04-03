@@ -37,7 +37,6 @@ Shader "Custom/LiquidFill"
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            // ---- 顶点输入 / 输出 ----
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -49,7 +48,6 @@ Shader "Custom/LiquidFill"
                 float3 worldPos : TEXCOORD0;
             };
 
-            // ---- Uniform（URP SRP Batcher 要求放入 UnityPerMaterial CBuffer）----
             CBUFFER_START(UnityPerMaterial)
                 float  _FillAmount;
                 float4 _Color;
@@ -64,7 +62,6 @@ Shader "Custom/LiquidFill"
                 float  _CenterZ;
             CBUFFER_END
 
-            // ---- 顶点着色器 ----
             v2f vert(appdata v)
             {
                 v2f o;
@@ -73,7 +70,6 @@ Shader "Custom/LiquidFill"
                 return o;
             }
 
-            // ---- 片元着色器 ----
             half4 frag(v2f i, half facing : VFACE) : SV_Target
             {
                 // fillAmount 为 0 时完全不渲染

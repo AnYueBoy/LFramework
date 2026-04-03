@@ -1,0 +1,37 @@
+{
+    "files.exclude": {
+        "**/*.meta": true,
+        "**/Library": true,
+        "**/Temp": true,
+        "**/obj": true,
+        "**/Logs": true,
+        "**/Build": true,
+        "**/.vs": true,
+        "**/*.slnx": true,
+        "**/*.htm": true,
+        "**/*.asset": true,
+        "**/*.mat": true
+    },
+    "search.exclude": {
+        "**/*.meta": true,
+        "**/Library": true,
+        "**/Temp": true,
+        "**/obj": true,
+        "**/Logs": true,
+        "**/Build": true,
+        "**/.vs": true,
+        "**/*.csproj": true,
+        "**/*.sln": true,
+        "**/*.slnx": true,
+        "**/*.htm": true
+    },
+    "files.watcherExclude": {
+        "**/Library/**": true,
+        "**/Temp/**": true,
+        "**/obj/**": true,
+        "**/Logs/**": true,
+        "**/Build/**": true,
+        "**/*.csproj": true
+    },
+    "dotnet.defaultSolution": "LFramework.sln"
+}

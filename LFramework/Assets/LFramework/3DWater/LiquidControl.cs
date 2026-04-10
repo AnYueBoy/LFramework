@@ -3,7 +3,17 @@ using UnityEngine;
 [RequireComponent(typeof(Renderer))]
 public class LiquidControl : MonoBehaviour
 {
+    public const int MaxSegments = 8;
+
     [Range(0f, 1f)] public float fillAmount = 0f;
+
+    [Header("Segments")]
+    [Tooltip("瓶子分为几段水来填满（1~8）")]
+    [Range(1, MaxSegments)]
+    public int segmentCount = 1;
+
+    [Tooltip("每段水的颜色，数组长度应与 segmentCount 一致（从底部到顶部）")]
+    public Color[] segmentColors = { new Color(0.2f, 0.6f, 1f, 1f) };
 
     [Header("Slosh")] [Tooltip("弹簧刚度：值越大水面回正越快")]
     public float stiffness = 8f;
@@ -15,12 +25,11 @@ public class LiquidControl : MonoBehaviour
     private Renderer _renderer;
     private Collider _collider;
 
-    // 水面倾斜坡度（X轴、Z轴各独立的弹簧阻尼系统）
-    private Vector2 _tilt; // 当前倾斜量 (tiltX, tiltZ)
-    private Vector2 _tiltVelocity; // 倾斜速度
+    private Vector2 _tilt;
+    private Vector2 _tiltVelocity;
 
-    private Vector3 _prevPosition; // 上一帧容器位置，用于计算速度
-    private Vector3 _prevVelocity; // 上一帧容器速度，用于计算加速度
+    private Vector3 _prevPosition;
+    private Vector3 _prevVelocity;
 
     private static readonly int FillAmountID = Shader.PropertyToID("_FillAmount");
     private static readonly int MinYID = Shader.PropertyToID("_MinY");
@@ -29,6 +38,8 @@ public class LiquidControl : MonoBehaviour
     private static readonly int TiltZID = Shader.PropertyToID("_TiltZ");
     private static readonly int CenterXID = Shader.PropertyToID("_CenterX");
     private static readonly int CenterZID = Shader.PropertyToID("_CenterZ");
+    private static readonly int SegmentCountID = Shader.PropertyToID("_SegmentCount");
+    private static readonly int SegmentColorsID = Shader.PropertyToID("_SegmentColors");
 
     void Awake()
     {
@@ -72,12 +83,27 @@ public class LiquidControl : MonoBehaviour
     void UpdateMaterial()
     {
         Bounds bounds = _collider.bounds;
-        _renderer.material.SetFloat(MinYID, bounds.min.y);
-        _renderer.material.SetFloat(MaxYID, bounds.max.y);
-        _renderer.material.SetFloat(FillAmountID, fillAmount);
-        _renderer.material.SetFloat(TiltXID, _tilt.x);
-        _renderer.material.SetFloat(TiltZID, _tilt.y);
-        _renderer.material.SetFloat(CenterXID, bounds.center.x);
-        _renderer.material.SetFloat(CenterZID, bounds.center.z);
+        Material mat = _renderer.material;
+
+        mat.SetFloat(MinYID, bounds.min.y);
+        mat.SetFloat(MaxYID, bounds.max.y);
+        mat.SetFloat(FillAmountID, fillAmount);
+        mat.SetFloat(TiltXID, _tilt.x);
+        mat.SetFloat(TiltZID, _tilt.y);
+        mat.SetFloat(CenterXID, bounds.center.x);
+        mat.SetFloat(CenterZID, bounds.center.z);
+
+        int count = Mathf.Clamp(segmentCount, 1, MaxSegments);
+        mat.SetInt(SegmentCountID, count);
+
+        var colors = new Vector4[MaxSegments];
+        for (int i = 0; i < MaxSegments; i++)
+        {
+            if (segmentColors != null && i < segmentColors.Length)
+                colors[i] = segmentColors[i];
+            else
+                colors[i] = Color.white;
+        }
+        mat.SetVectorArray(SegmentColorsID, colors);
     }
 }

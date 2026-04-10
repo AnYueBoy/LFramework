@@ -8,20 +8,29 @@ public class WaterStream : MonoBehaviour
     public Transform endPoint;
 
     [Header("形状")]
-    [Tooltip("弧顶控制点相对中点的向上偏移")] public float arcHeight = 0.3f;
-    [Tooltip("管道半径")] public float streamRadius = 0.05f;
-    [Tooltip("沿曲线采样段数")] public int curveSegments = 20;
+    [Tooltip("起始处半径")] public float startRadius = 0.04f;
+    [Tooltip("末端半径")] public float endRadius = 0.015f;
+    [Tooltip("沿曲线采样段数")] public int curveSegments = 24;
     [Tooltip("截面圆环顶点数")] public int ringVertices = 8;
 
+    [Header("物理")]
+    [Tooltip("重力加速度")] public float gravity = 9.81f;
+    [Tooltip("水流出射速度倍数")] public float exitSpeedScale = 1.5f;
+
     [Header("外观")]
-    public Color streamColor = new Color(0.2f, 0.6f, 1f, 1f);
+    public Color streamColor = new Color(0.2f, 0.6f, 1f, 0.85f);
+
+    [Header("状态")]
+    [Tooltip("是否正在倒水")] public bool isPouring;
 
     private MeshFilter _meshFilter;
     private MeshRenderer _meshRenderer;
     private Mesh _mesh;
+    private Material _mat;
 
     private Vector3 _prevStart;
     private Vector3 _prevEnd;
+    private bool _prevPouring;
 
     void Awake()
     {
@@ -31,34 +40,38 @@ public class WaterStream : MonoBehaviour
         _mesh = new Mesh { name = "WaterStream" };
         _meshFilter.mesh = _mesh;
 
-        // 创建并赋值材质
         var shader = Shader.Find("Custom/WaterStream");
         if (shader == null)
-            shader = Shader.Find("Unlit/Color");
-        var mat = new Material(shader);
-        mat.color = streamColor;
-        _meshRenderer.material = mat;
-    }
-
-    void OnEnable()
-    {
-        RebuildMesh();
+            shader = Shader.Find("Universal Render Pipeline/Lit");
+        _mat = new Material(shader);
+        _mat.SetColor("_Color", streamColor);
+        _meshRenderer.material = _mat;
     }
 
     void Update()
     {
-        if (startPoint == null || endPoint == null) return;
+        if (!isPouring || startPoint == null || endPoint == null)
+        {
+            if (_mesh.vertexCount > 0)
+                _mesh.Clear();
+            _prevPouring = isPouring;
+            return;
+        }
 
-        // 只在端点移动时重建，避免每帧重建浪费性能
-        if (startPoint.position != _prevStart || endPoint.position != _prevEnd)
+        bool changed = startPoint.position != _prevStart
+                     || endPoint.position != _prevEnd
+                     || isPouring != _prevPouring;
+
+        if (changed)
         {
             RebuildMesh();
             _prevStart = startPoint.position;
             _prevEnd = endPoint.position;
+            _prevPouring = isPouring;
         }
 
-        // 同步颜色
-        _meshRenderer.material.color = streamColor;
+        if (_mat != null)
+            _mat.SetColor("_Color", streamColor);
     }
 
     void OnDisable()
@@ -69,8 +82,8 @@ public class WaterStream : MonoBehaviour
 
     void OnDestroy()
     {
-        if (_mesh != null)
-            Destroy(_mesh);
+        if (_mesh != null) Destroy(_mesh);
+        if (_mat != null) Destroy(_mat);
     }
 
     public void RebuildMesh()
@@ -78,70 +91,86 @@ public class WaterStream : MonoBehaviour
         if (startPoint == null || endPoint == null) return;
 
         Vector3 p0 = startPoint.position;
-        Vector3 p2 = endPoint.position;
-        Vector3 p1 = (p0 + p2) * 0.5f + Vector3.up * arcHeight;
+        Vector3 pEnd = endPoint.position;
 
-        int rings = curveSegments + 1;
+        var curvePoints = ComputeParabolicArc(p0, pEnd, curveSegments + 1);
+        int rings = curvePoints.Length;
         int rv = ringVertices;
 
-        // 顶点数 = 环数 * 每环顶点数 + 2（首尾封口中心点）
         var vertices = new Vector3[rings * rv + 2];
-        var triangles = new System.Collections.Generic.List<int>();
+        var uvs = new Vector2[vertices.Length];
+        var normals = new Vector3[vertices.Length];
+        var triangles = new System.Collections.Generic.List<int>((rings - 1) * rv * 6 + rv * 6);
 
-        // 采样曲线点与切线
-        var curvePoints = new Vector3[rings];
-        var curveTangents = new Vector3[rings];
-
+        var tangents = new Vector3[rings];
         for (int i = 0; i < rings; i++)
         {
-            float t = (float)i / curveSegments;
-            curvePoints[i] = QuadBezier(p0, p1, p2, t);
-            curveTangents[i] = QuadBezierTangent(p0, p1, p2, t).normalized;
+            if (i < rings - 1)
+                tangents[i] = (curvePoints[i + 1] - curvePoints[i]).normalized;
+            else
+                tangents[i] = (curvePoints[i] - curvePoints[i - 1]).normalized;
         }
 
-        // 生成圆环顶点（平行传输，避免截面扭转）
-        // 初始化第一帧坐标系
-        Vector3 t0 = curveTangents[0];
+        Vector3 t0 = tangents[0];
         Vector3 initUp = Vector3.up;
         if (Mathf.Abs(Vector3.Dot(t0, initUp)) > 0.99f)
             initUp = Vector3.right;
         Vector3 frameRight = Vector3.Cross(initUp, t0).normalized;
         Vector3 frameUp = Vector3.Cross(t0, frameRight).normalized;
 
+        float totalLen = 0f;
+        var cumLengths = new float[rings];
+        cumLengths[0] = 0f;
+        for (int i = 1; i < rings; i++)
+        {
+            totalLen += Vector3.Distance(curvePoints[i], curvePoints[i - 1]);
+            cumLengths[i] = totalLen;
+        }
+
         for (int i = 0; i < rings; i++)
         {
-            // 平行传输：将上一帧的 right 投影到当前切线的法平面，保持连续性
             if (i > 0)
             {
-                Vector3 curTangent = curveTangents[i];
-                // 将 frameRight 投影到当前切线法平面并重新归一化
+                Vector3 curTangent = tangents[i];
                 frameRight = (frameRight - Vector3.Dot(frameRight, curTangent) * curTangent).normalized;
                 frameUp = Vector3.Cross(curTangent, frameRight).normalized;
             }
 
+            float t = (float)i / (rings - 1);
+            float radius = Mathf.Lerp(startRadius, endRadius, t);
+            float u = totalLen > 0 ? cumLengths[i] / totalLen : t;
+
             for (int j = 0; j < rv; j++)
             {
                 float angle = 2f * Mathf.PI * j / rv;
-                Vector3 offset = (Mathf.Cos(angle) * frameRight + Mathf.Sin(angle) * frameUp) * streamRadius;
-                vertices[i * rv + j] = transform.InverseTransformPoint(curvePoints[i] + offset);
+                float cos = Mathf.Cos(angle);
+                float sin = Mathf.Sin(angle);
+                Vector3 offset = (cos * frameRight + sin * frameUp) * radius;
+                Vector3 wp = curvePoints[i] + offset;
+
+                int idx = i * rv + j;
+                vertices[idx] = transform.InverseTransformPoint(wp);
+                uvs[idx] = new Vector2(u, (float)j / rv);
+                normals[idx] = (cos * frameRight + sin * frameUp).normalized;
             }
         }
 
-        // 首尾封口中心点（局部坐标）
         int capStartIdx = rings * rv;
         int capEndIdx = rings * rv + 1;
         vertices[capStartIdx] = transform.InverseTransformPoint(curvePoints[0]);
         vertices[capEndIdx] = transform.InverseTransformPoint(curvePoints[rings - 1]);
+        uvs[capStartIdx] = new Vector2(0, 0.5f);
+        uvs[capEndIdx] = new Vector2(1, 0.5f);
+        normals[capStartIdx] = transform.InverseTransformDirection(-tangents[0]);
+        normals[capEndIdx] = transform.InverseTransformDirection(tangents[rings - 1]);
 
-        // 侧面三角形（相邻两环之间的四边形 → 两个三角形）
-        for (int i = 0; i < curveSegments; i++)
+        for (int i = 0; i < rings - 1; i++)
         {
             int baseA = i * rv;
             int baseB = (i + 1) * rv;
             for (int j = 0; j < rv; j++)
             {
                 int next = (j + 1) % rv;
-                // 四边形 A-B-B'-A'
                 triangles.Add(baseA + j);
                 triangles.Add(baseB + j);
                 triangles.Add(baseB + next);
@@ -152,16 +181,14 @@ public class WaterStream : MonoBehaviour
             }
         }
 
-        // 起始端面封口（fan）
         for (int j = 0; j < rv; j++)
         {
             int next = (j + 1) % rv;
             triangles.Add(capStartIdx);
-            triangles.Add(next);        // 反向保证法线朝外
+            triangles.Add(next);
             triangles.Add(j);
         }
 
-        // 末端端面封口（fan）
         int lastRingBase = (rings - 1) * rv;
         for (int j = 0; j < rv; j++)
         {
@@ -173,22 +200,45 @@ public class WaterStream : MonoBehaviour
 
         _mesh.Clear();
         _mesh.vertices = vertices;
+        _mesh.normals = normals;
+        _mesh.uv = uvs;
         _mesh.triangles = triangles.ToArray();
-        _mesh.RecalculateNormals();
         _mesh.RecalculateBounds();
     }
 
-    // 二次贝塞尔曲线采样
-    static Vector3 QuadBezier(Vector3 p0, Vector3 p1, Vector3 p2, float t)
+    /// <summary>
+    /// 水平匀速 + 竖直自由落体，v0y = 0，水只往下掉。
+    /// </summary>
+    Vector3[] ComputeParabolicArc(Vector3 from, Vector3 to, int sampleCount)
     {
-        float u = 1f - t;
-        return u * u * p0 + 2f * u * t * p1 + t * t * p2;
-    }
+        var points = new Vector3[sampleCount];
 
-    // 二次贝塞尔切线（一阶导数）
-    static Vector3 QuadBezierTangent(Vector3 p0, Vector3 p1, Vector3 p2, float t)
-    {
-        return 2f * (1f - t) * (p1 - p0) + 2f * t * (p2 - p1);
+        float dy = to.y - from.y;
+        float fallHeight = Mathf.Max(-dy, 0.01f);
+
+        // 自由落体时间: h = 0.5*g*T^2
+        float T = Mathf.Sqrt(2f * fallHeight / gravity);
+        T = Mathf.Max(T, 0.05f);
+
+        Vector3 horizDelta = new Vector3(to.x - from.x, 0, to.z - from.z);
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / (sampleCount - 1);
+            float time = t * T;
+
+            // 水平方向匀速插值到终点
+            Vector3 h = from + horizDelta * t;
+            // 竖直方向纯自由落体（v0y = 0，只往下掉）
+            float y = from.y - 0.5f * gravity * time * time;
+
+            points[i] = new Vector3(h.x, y, h.z);
+        }
+
+        points[0] = from;
+        points[sampleCount - 1] = to;
+
+        return points;
     }
 
 #if UNITY_EDITOR
@@ -196,10 +246,22 @@ public class WaterStream : MonoBehaviour
     {
         curveSegments = Mathf.Max(2, curveSegments);
         ringVertices = Mathf.Max(3, ringVertices);
-        streamRadius = Mathf.Max(0.001f, streamRadius);
+        startRadius = Mathf.Max(0.001f, startRadius);
+        endRadius = Mathf.Max(0.001f, endRadius);
 
         if (Application.isPlaying && isActiveAndEnabled)
             RebuildMesh();
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        if (startPoint == null || endPoint == null) return;
+        var pts = ComputeParabolicArc(startPoint.position, endPoint.position, 30);
+        Gizmos.color = streamColor;
+        for (int i = 0; i < pts.Length - 1; i++)
+            Gizmos.DrawLine(pts[i], pts[i + 1]);
+        Gizmos.DrawWireSphere(startPoint.position, startRadius);
+        Gizmos.DrawWireSphere(endPoint.position, endRadius);
     }
 #endif
 }

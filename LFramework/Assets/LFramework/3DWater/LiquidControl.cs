@@ -13,13 +13,14 @@ public class LiquidControl : MonoBehaviour
     [Tooltip("最大倾斜坡度（世界单位/米），防止穿模")] public float maxTilt = 0.5f;
 
     private Renderer _renderer;
+    private Collider _collider;
 
     // 水面倾斜坡度（X轴、Z轴各独立的弹簧阻尼系统）
     private Vector2 _tilt; // 当前倾斜量 (tiltX, tiltZ)
     private Vector2 _tiltVelocity; // 倾斜速度
 
-    private Vector3 _prevPosition;
-    private Vector3 _prevVelocity;
+    private Vector3 _prevPosition; // 上一帧容器位置，用于计算速度
+    private Vector3 _prevVelocity; // 上一帧容器速度，用于计算加速度
 
     private static readonly int FillAmountID = Shader.PropertyToID("_FillAmount");
     private static readonly int MinYID = Shader.PropertyToID("_MinY");
@@ -32,7 +33,8 @@ public class LiquidControl : MonoBehaviour
     void Awake()
     {
         _renderer = GetComponent<Renderer>();
-        _prevPosition = transform.position;
+        _collider = GetComponent<Collider>();
+        _prevPosition = transform.position; // 初始化位置，防止第一帧计算出错误的加速度
     }
 
     void Update()
@@ -69,7 +71,7 @@ public class LiquidControl : MonoBehaviour
 
     void UpdateMaterial()
     {
-        Bounds bounds = _renderer.bounds;
+        Bounds bounds = _collider.bounds;
         _renderer.material.SetFloat(MinYID, bounds.min.y);
         _renderer.material.SetFloat(MaxYID, bounds.max.y);
         _renderer.material.SetFloat(FillAmountID, fillAmount);

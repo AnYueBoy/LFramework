@@ -25,11 +25,16 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
+    - _CenterX: 0
+    - _CenterZ: 0
     - _FillAmount: 0.02
     - _FillLevel: 0.5
-    - _FoamWidth: 0.0068
+    - _FoamWidth: 0
     - _MaxY: 1
     - _MinY: 0
+    - _SegmentCount: 1
+    - _TiltX: 0
+    - _TiltZ: 0
     - _TopWidth: 0.05
     m_Colors:
     - _Color: {r: 0.19999996, g: 0.6, b: 1, a: 1}

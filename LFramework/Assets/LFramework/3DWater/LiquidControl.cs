@@ -7,20 +7,33 @@ public class LiquidControl : MonoBehaviour
 
     [Range(0f, 1f)] public float fillAmount = 0f;
 
-    [Header("Segments")]
-    [Tooltip("瓶子分为几段水来填满（1~8）")]
-    [Range(1, MaxSegments)]
-    public int segmentCount = 1;
+    [Range(1, MaxSegments)] public int segmentCount = 1;
 
-    [Tooltip("每段水的颜色，数组长度应与 segmentCount 一致（从底部到顶部）")]
     public Color[] segmentColors = { new Color(0.2f, 0.6f, 1f, 1f) };
 
-    [Header("Slosh")] [Tooltip("弹簧刚度：值越大水面回正越快")]
-    public float stiffness = 8f;
+    #region 水面弹性阻尼
 
-    [Tooltip("阻尼：值越大振荡衰减越快")] public float damping = 1.5f;
-    [Tooltip("惯性强度：容器加速度对水面倾斜的影响倍数")] public float inertiaScale = 0.08f;
-    [Tooltip("最大倾斜坡度（世界单位/米），防止穿模")] public float maxTilt = 0.5f;
+    /// <summary>
+    /// 弹簧刚度：值越大水面回正越快
+    /// </summary>
+    [SerializeField] private float stiffness = 8f;
+
+    /// <summary>
+    /// 阻尼：值越大振荡衰减越快 
+    /// </summary>
+    [SerializeField] private float damping = 1.5f;
+
+    /// <summary>
+    /// 惯性强度：容器加速度对水面倾斜的影响倍数
+    /// </summary>
+    [SerializeField] private float inertiaScale = 0.08f;
+
+    /// <summary>
+    /// 最大倾斜坡度（世界单位/米），防止穿模
+    /// </summary>
+    [SerializeField] private float maxTilt = 0.5f;
+
+    #endregion
 
     private Renderer _renderer;
     private Collider _collider;
@@ -31,6 +44,8 @@ public class LiquidControl : MonoBehaviour
     private Vector3 _prevPosition;
     private Vector3 _prevVelocity;
 
+    #region Shader Keyword
+
     private static readonly int FillAmountID = Shader.PropertyToID("_FillAmount");
     private static readonly int MinYID = Shader.PropertyToID("_MinY");
     private static readonly int MaxYID = Shader.PropertyToID("_MaxY");
@@ -40,6 +55,8 @@ public class LiquidControl : MonoBehaviour
     private static readonly int CenterZID = Shader.PropertyToID("_CenterZ");
     private static readonly int SegmentCountID = Shader.PropertyToID("_SegmentCount");
     private static readonly int SegmentColorsID = Shader.PropertyToID("_SegmentColors");
+
+    #endregion
 
     void Awake()
     {
@@ -104,6 +121,7 @@ public class LiquidControl : MonoBehaviour
             else
                 colors[i] = Color.white;
         }
+
         mat.SetVectorArray(SegmentColorsID, colors);
     }
 }
